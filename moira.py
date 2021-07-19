@@ -44,25 +44,26 @@ moira.permission_role = moira_permission_role
 
 moira.remove_command("help")
 
+
 @moira.event
 async def on_ready():
   print('Successfully logged in as {0.user}'.format(moira))
-
-  async with ClientSession() as s:
+  
+  s = ClientSession()
+  async with s:
     t = timestamp()
-
     log = DiscordHooks(
       moira_hooks_logs_id,
       moira_hooks_logs_token,
       AsyncWebhookAdapter(s)
     )
-
     await log.hook.send(
       embed=Embed(
         title='Moira up!',
         description=f'It\'s true.\nUTC Timestamp: {t.tm_mday}-{t.tm_mon}-{t.tm_year} at {t.tm_hour}:{t.tm_min}:{t.tm_sec}.'
       )
     )
+  await s.close()
 
 @moira.event
 async def on_command_error(ctx, err):
