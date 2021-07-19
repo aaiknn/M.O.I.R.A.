@@ -1,19 +1,16 @@
 #!/usr/bin/env python3
 
-from aiohttp import ClientSession
 from os import environ as env
 from random import choice
-from discord import AsyncWebhookAdapter
-from discord import Embed
 from discord import Intents
-from discord import Webhook
 from discord.ext import commands
 from dotenv import load_dotenv
-from time import gmtime as timestamp
 from time import sleep
 
+import logs.warnings as warn
 from phrases.default import basicScriptFail, beforeResearch, initialPrompt
 from utils.commands import waitingForInput
+from utils.startup import logStartup
 
 load_dotenv()
 
@@ -32,38 +29,24 @@ moira = commands.Bot(
   intents=intents
 )
 
-class DiscordHooks:
-  def __init__(self, id, token, adapter):
-    self.hook = Webhook.from_url(
-      f'https://discordapp.com/api/webhooks/{id}/{token}',
-      adapter=adapter
-    )
-
 moira.patience = moira_patience
 moira.permission_role = moira_permission_role
 
 moira.remove_command("help")
 
-
 @moira.event
 async def on_ready():
   print('Successfully logged in as {0.user}'.format(moira))
+  warnings = []
+
+  if not moira_permission_role:
+    warnings.append(f'Warning: {warn.moira_permissions_not_set}')
+    print(f'Warning: {warn.moira_permissions_not_set}')
   
-  s = ClientSession()
-  async with s:
-    t = timestamp()
-    log = DiscordHooks(
-      moira_hooks_logs_id,
-      moira_hooks_logs_token,
-      AsyncWebhookAdapter(s)
-    )
-    await log.hook.send(
-      embed=Embed(
-        title='Moira up!',
-        description=f'It\'s true.\nUTC Timestamp: {t.tm_mday}-{t.tm_mon}-{t.tm_year} at {t.tm_hour}:{t.tm_min}:{t.tm_sec}.'
-      )
-    )
-  await s.close()
+  if moira_hooks_logs_id and moira_hooks_logs_token:
+    webhookId = moira_hooks_logs_id
+    webhookToken = moira_hooks_logs_token
+    await logStartup(webhookId, webhookToken, warnings)
 
 @moira.event
 async def on_command_error(ctx, err):
