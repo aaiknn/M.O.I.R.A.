@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 
-from os import environ
+from aiohttp import ClientSession
+from os import environ as env
 from random import choice
+from discord import AsyncWebhookAdapter
+from discord import Embed
 from discord import Intents
+from discord import Webhook
 from discord.ext import commands
 from dotenv import load_dotenv
+from time import gmtime as timestamp
 from time import sleep
 
 from phrases.default import basicScriptFail, beforeResearch, initialPrompt
@@ -12,9 +17,11 @@ from utils.commands import waitingForInput
 
 load_dotenv()
 
-moira_patience = int(environ.get('MOIRA_MAX_PROMPT_LOOPS'))
-moira_permission_role = str(environ.get('MOIRA_PERM_ROLE'))
-moira_prefix = str(environ.get('MOIRA_PREFIX'))
+moira_hooks_logs_id = str(env.get('MOIRA_WEBHOOKS_LOGS_ID'))
+moira_hooks_logs_token = str(env.get('MOIRA_WEBHOOKS_LOGS_TOKEN'))
+moira_patience = int(env.get('MOIRA_MAX_PROMPT_LOOPS'))
+moira_permission_role = str(env.get('MOIRA_PERM_ROLE'))
+moira_prefix = str(env.get('MOIRA_PREFIX'))
 
 intents = Intents.default()
 intents.members = True
@@ -25,6 +32,13 @@ moira = commands.Bot(
   intents=intents
 )
 
+class DiscordHooks:
+  def __init__(self, id, token, adapter):
+    self.hook = Webhook.from_url(
+      f'https://discordapp.com/api/webhooks/{id}/{token}',
+      adapter=adapter
+    )
+
 moira.patience = moira_patience
 moira.permission_role = moira_permission_role
 
@@ -33,6 +47,22 @@ moira.remove_command("help")
 @moira.event
 async def on_ready():
   print('Successfully logged in as {0.user}'.format(moira))
+
+  async with ClientSession() as s:
+    t = timestamp()
+
+    log = DiscordHooks(
+      moira_hooks_logs_id,
+      moira_hooks_logs_token,
+      AsyncWebhookAdapter(s)
+    )
+
+    await log.hook.send(
+      embed=Embed(
+        title='Moira up!',
+        description=f'It\'s true.\nUTC Timestamp: {t.tm_mday}-{t.tm_mon}-{t.tm_year} at {t.tm_hour}:{t.tm_min}:{t.tm_sec}.'
+      )
+    )
 
 @moira.event
 async def on_command_error(ctx, err):
@@ -60,4 +90,4 @@ async def askForInput(ctx):
     await ctx.send(prompt.content)
     await ctx.send(choice(beforeResearch))
 
-moira.run(str(environ.get('DISCORD_API_TOKEN')))
+moira.run(str(env.get('DISCORD_API_TOKEN')))
