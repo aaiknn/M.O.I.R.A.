@@ -53,6 +53,10 @@ async def on_command_error(ctx, err):
   await ctx.send(f"{choice(basicScriptFail)} `{err}`.")
 
 @moira.event
+async def on_error():
+  print('Some shit went down. (That\'s good enough for now.)')
+
+@moira.event
 async def on_message(message):
   if message.author == moira.user:
       return
