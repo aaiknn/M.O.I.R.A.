@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import openai
+# from json import load
 from random import choice
 
 from phrases.default import beforeResearch
