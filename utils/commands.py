@@ -6,7 +6,7 @@ from random import choice
 from phrases.default import onesidedBye, promptTimeout
 from utils.general import texting
 
-async def checkForPermission(self, user):
+def checkForPermission(self, user):
   check = False
   for role in user.roles:
     if self.permission_role in str(role):
@@ -15,19 +15,22 @@ async def checkForPermission(self, user):
   return check
 
 async def requestPermission(self, ctx):
-  async def check(m):
-    check = await checkForPermission(self, m.author)
-    return check
-
   await ctx.send('Requesting permission to do so.')
 
+  def check(m):
+    check = checkForPermission(self, m.author)
+    if check and 'yes' in m.content:
+      return True
+    else:
+      return False
+
   try:
-    await self.wait_for('message', check=check, timeout=60.0)
+    perm = await self.wait_for('message', check=check, timeout=60.0)
   except TimeoutError:
     await ctx.send('Request timeout.')
     return False
   else:
-    return True
+    return perm
 
 async def waitingForInput(self, ctx, user):
   def check(m):
@@ -46,7 +49,7 @@ async def waitingForInput(self, ctx, user):
         await ctx.send(choice(promptTimeout))
         continue
     else:
-      perm = await checkForPermission(self, ctx.author)
+      perm = checkForPermission(self, ctx.author)
       if perm:
         return prompt
       else:
