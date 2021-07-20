@@ -8,8 +8,10 @@ from dotenv import load_dotenv
 from time import sleep
 
 import logs.warnings as warn
-from phrases.default import basicScriptFail, beforeResearch, initialPrompt
+from phrases.default import basicScriptFail, initialPrompt
 from utils.commands import waitingForInput
+from utils.prompts import handleResponse
+from utils.prompts import parsePrompt
 from utils.startup import logStartup
 
 load_dotenv()
@@ -19,6 +21,8 @@ moira_hooks_logs_token = str(env.get('MOIRA_WEBHOOKS_LOGS_TOKEN'))
 moira_patience = int(env.get('MOIRA_MAX_PROMPT_LOOPS'))
 moira_permission_role = str(env.get('MOIRA_PERM_ROLE'))
 moira_prefix = str(env.get('MOIRA_PREFIX'))
+
+openai_api_token = str(env.get('OPENAI_API_TOKEN'))
 
 intents = Intents.default()
 intents.members = True
@@ -31,6 +35,7 @@ moira = commands.Bot(
 
 moira.patience = moira_patience
 moira.permission_role = moira_permission_role
+moira.token = openai_api_token
 
 moira.remove_command("help")
 
@@ -41,7 +46,11 @@ async def on_ready():
 
   if not moira_permission_role:
     warnings.append(f'Warning: {warn.moira_permissions_not_set}')
-    print(f'Warning: {warn.moira_permissions_not_set}')
+    print(f'\nWarning: {warn.moira_permissions_not_set}')
+
+  if not openai_api_token:
+    warnings.append(f'Warning: {warn.openai_token_not_set}')
+    print(f'\nWarning: {warn.openai_token_not_set}')
   
   if moira_hooks_logs_id and moira_hooks_logs_token:
     webhookId = moira_hooks_logs_id
@@ -75,7 +84,10 @@ async def askForInput(ctx):
   sleep(1)
   prompt = await waitingForInput(moira, ctx, user)
   if prompt:
-    await ctx.send(prompt.content)
-    await ctx.send(choice(beforeResearch))
+    response = await parsePrompt(moira, ctx, prompt.content)
+    if response:
+      await handleResponse(ctx, response)
+    else:
+      await ctx.send('I don\'t yet know how to do that.')
 
 moira.run(str(env.get('DISCORD_API_TOKEN')))

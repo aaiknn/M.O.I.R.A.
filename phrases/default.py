@@ -1,4 +1,5 @@
 casualAdvice = [
+  "Bros don't bitch about another bro's project's binary size.",
   "Don't forget to water the important plants.",
   "Remember to stretch every now and then.",
   "What's your progress on the workout thing?"
@@ -74,5 +75,5 @@ promptTimeout = [
   "Sooooo... Am I still needed?",
   "Still ready to go.",
   "Still standing by.",
-  "Still waiting for instructions"
+  "Still waiting for instructions."
 ]
