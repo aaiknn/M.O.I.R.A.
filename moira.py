@@ -2,15 +2,16 @@
 
 from os import environ as env
 from random import choice
-from discord import DMChannel
+from discord import DMChannel, TextChannel
 from discord import Intents
 from discord.ext import commands
 from dotenv import load_dotenv
 from time import sleep
 
 import logs.warnings as warn
-from phrases.default import basicScriptFail, initialPrompt
+from phrases.default import basicScriptFail, initialPrompt, misc
 from utils.commands import waitingForInput
+from utils.general import texting
 from utils.prompts import handleResponse
 from utils.prompts import parsePrompt
 from utils.startup import logStartup
@@ -81,17 +82,25 @@ async def on_message(message):
 @moira.command(name="moira", pass_context=True)
 async def initialPrompting(ctx):
   user = ctx.author
+
   if type(ctx.channel) == DMChannel:
-    await ctx.send('Hey. Just wanting to let you know that I\'m not ready to do any work in direct messages.')
-  else:
+    await texting(ctx)
+    await ctx.send(misc['notInDMs'])
+
+  elif type(ctx.channel) == TextChannel:
+    await texting(ctx)
     await ctx.send(choice(initialPrompt))
-    sleep(1)
     prompt = await waitingForInput(moira, ctx, user)
     if prompt:
       response = await parsePrompt(moira, ctx, prompt.content)
       if response:
         await handleResponse(ctx, response)
       else:
-        await ctx.send('I don\'t yet know how to do that.')
+        await texting(ctx)
+        await ctx.send(misc['failsafe'])
+
+  else:
+    await texting(ctx)
+    await ctx.send(misc['notInOther'])
 
 moira.run(str(env.get('DISCORD_API_TOKEN')))

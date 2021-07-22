@@ -1,3 +1,9 @@
+misc = {
+  'failsafe': 'I don\'t yet know how to do that.',
+  'notInDMs': 'Hey. Just wanting to let you know that I\'m not ready to do any work in direct messages.',
+  'notInOther': 'Hi! Feel free to ignore me. I\'m here for relaxation, not work.'
+}
+
 casualAdvice = [
   "Bros don't bitch about another bro's project's binary size.",
   "Don't forget to water the important plants.",
