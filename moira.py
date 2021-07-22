@@ -2,6 +2,7 @@
 
 from os import environ as env
 from random import choice
+from discord import DMChannel
 from discord import Intents
 from discord.ext import commands
 from dotenv import load_dotenv
@@ -78,16 +79,19 @@ async def on_message(message):
   await moira.process_commands(message)
 
 @moira.command(name="moira", pass_context=True)
-async def askForInput(ctx):
+async def initialPrompting(ctx):
   user = ctx.author
-  await ctx.send(choice(initialPrompt))
-  sleep(1)
-  prompt = await waitingForInput(moira, ctx, user)
-  if prompt:
-    response = await parsePrompt(moira, ctx, prompt.content)
-    if response:
-      await handleResponse(ctx, response)
-    else:
-      await ctx.send('I don\'t yet know how to do that.')
+  if type(ctx.channel) == DMChannel:
+    await ctx.send('Hey. Just wanting to let you know that I\'m not ready to do any work in direct messages.')
+  else:
+    await ctx.send(choice(initialPrompt))
+    sleep(1)
+    prompt = await waitingForInput(moira, ctx, user)
+    if prompt:
+      response = await parsePrompt(moira, ctx, prompt.content)
+      if response:
+        await handleResponse(ctx, response)
+      else:
+        await ctx.send('I don\'t yet know how to do that.')
 
 moira.run(str(env.get('DISCORD_API_TOKEN')))
