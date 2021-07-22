@@ -65,6 +65,11 @@ onesidedBye = [
   "Just call me once you got there."
 ]
 
+permissionDenied = [
+  "Awfully sorry, mate.",
+  "Permission denied"
+]
+
 promptTimeout = [
   "Bump.",
   "Have you made up your mind on what you wanted yet?",
@@ -76,4 +81,12 @@ promptTimeout = [
   "Still ready to go.",
   "Still standing by.",
   "Still waiting for instructions."
+]
+
+requestTimeout = [
+  "Request timeout."
+]
+
+requestPermission = [
+  "Requesting permission to do so."
 ]

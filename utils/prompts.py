@@ -13,25 +13,24 @@ async def parsePrompt(self, ctx, prompt):
   await ctx.send(choice(beforeResearch))
 
   openai.api_key = self.token
-  if 'The' in prompt:
-    try:
-      response = openai.Completion.create(
-        engine="davinci",
-        prompt=prompt,
-        max_tokens=50
-      )
-    except:
-      return False
-    else:
-      return response
 
-  if 'Is' in prompt:
+  ## defaults
+  max_tokens=250
+
+  if 'information' or 'info' in prompt:
+    engine='davinci'
+  if 'detailed' in prompt:
+    engine='davinci-instruct-beta'
+    max_tokens=450
+
+  if engine:
     try:
-      response = openai.Completion.create(
-        engine="davinci-instruct-beta",
-        prompt=prompt,
-        max_tokens=100
-      )
+      async with ctx.channel.typing():
+        response = openai.Completion.create(
+          engine=engine,
+          prompt=prompt,
+          max_tokens=max_tokens
+        )
     except:
       return False
     else:
