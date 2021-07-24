@@ -5,6 +5,7 @@ from discord import Embed
 from discord import AsyncWebhookAdapter
 from time import gmtime as timestamp
 
+import logs.status as status
 from utils.webhooks import DiscordHooks
 
 async def logStartup(id, token, warnings):
@@ -17,7 +18,7 @@ async def logStartup(id, token, warnings):
         startUpMessage+=f'\n\n{warning}'
 
     embed = Embed(
-      title='Moira up!',
+      title=status.discord_webhook_log_moira_up,
       description=startUpMessage
     )
     log = DiscordHooks(

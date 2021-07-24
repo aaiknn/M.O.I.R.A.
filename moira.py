@@ -2,24 +2,25 @@
 
 from os import environ as env
 from random import choice
-from discord import DMChannel, TextChannel
-from discord import Intents
+from discord import DMChannel, Intents, TextChannel
 from discord.ext import commands
 from dotenv import load_dotenv
 from time import sleep
 
+import logs.errors as ugh
+import logs.status as status
 import logs.warnings as warn
 from phrases.default import basicScriptFail, initialPrompt, misc
 from utils.commands import waitingForInput
 from utils.general import texting
-from utils.prompts import handleResponse
-from utils.prompts import parsePrompt
+from utils.prompts import handleResponse, parsePrompt
 from utils.startup import logStartup
 
 load_dotenv()
 
 moira_hooks_logs_id = str(env.get('MOIRA_WEBHOOKS_LOGS_ID'))
 moira_hooks_logs_token = str(env.get('MOIRA_WEBHOOKS_LOGS_TOKEN'))
+moira_nickname = str(env.get('MOIRA_NICKNAME'))
 moira_patience = int(env.get('MOIRA_MAX_PROMPT_LOOPS'))
 moira_permission_role = str(env.get('MOIRA_PERM_ROLE'))
 moira_prefix = str(env.get('MOIRA_PREFIX'))
@@ -35,6 +36,7 @@ moira = commands.Bot(
   intents=intents
 )
 
+moira.nickname = moira_nickname
 moira.patience = moira_patience
 moira.permission_role = moira_permission_role
 moira.token = openai_api_token
@@ -43,7 +45,7 @@ moira.remove_command("help")
 
 @moira.event
 async def on_ready():
-  print('Successfully logged in as {0.user}'.format(moira))
+  print(status.discord_moira_onready.format(moira))
   warnings = []
 
   if not moira_permission_role:
@@ -65,7 +67,7 @@ async def on_command_error(ctx, err):
 
 @moira.event
 async def on_error():
-  print('Some shit went down. (That\'s good enough for now.)')
+  print(ugh.moira_discord_error_event)
 
 @moira.event
 async def on_message(message):
@@ -73,13 +75,13 @@ async def on_message(message):
       return
   
   if not message.content.startswith(moira_prefix):
-    if 'moira' in message.content:
+    if moira.nickname in message.content:
       sleep(2)
       await message.add_reaction('\U0001f440')
 
   await moira.process_commands(message)
 
-@moira.command(name="moira", pass_context=True)
+@moira.command(name=moira.nickname, pass_context=True)
 async def initialPrompting(ctx):
   user = ctx.author
 
