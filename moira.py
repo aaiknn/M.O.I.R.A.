@@ -10,12 +10,12 @@ from time import sleep
 import logs.errors as ugh
 import logs.status as status
 import logs.warnings as warn
-from phrases.default import basicScriptFail, initialPrompt, misc
+from phrases.default import basicScriptFail, busyState, initialPrompt, misc
 
 from sessions.tism import TheInfamousStateMachine as TISM
 
 from utils.commands import waitingForInput
-from utils.db import DBSetup, dbConnect
+from utils.db import DBSetup
 from utils.general import texting
 from utils.prompts import handleResponse, parsePrompt
 from utils.startup import dbSelftest, logStartupToDiscord
@@ -59,6 +59,7 @@ moira.db = DBSetup(
 moira.nickname = moira_nickname
 moira.patience = moira_patience
 moira.permission_role = moira_permission_role
+moira.mQ = []
 moira.tism = TISM()
 moira.token = openai_api_token
 
@@ -72,6 +73,8 @@ async def on_ready():
   print(status.discord_moira_onready.format(moira))
 
   moira.tism.setState('dbC', await dbSelftest(moira, globalErrors))
+  moira.tism.setState('busy', False)
+  moira.tism.setState('promptQueue', {})
 
   for meh in moira.db.errors:
     globalErrors.append(meh)
@@ -116,27 +119,42 @@ async def on_message(message):
 @moira.command(name=moira.nickname, pass_context=True)
 async def initialPrompting(ctx):
   user = ctx.author
+  m = ctx.message
+  chn = ctx.channel.name
 
-  if type(ctx.channel) == DMChannel:
-    await texting(ctx)
-    await ctx.send(misc['notInDMs'])
+  if moira.tism.state['busy'] == False:
+    moira.tism.setState('busy', True)
 
-  elif type(ctx.channel) == TextChannel:
-    await texting(ctx)
-    await ctx.send(choice(initialPrompt))
-    prompt = await waitingForInput(moira, ctx, user)
-    if prompt:
-      moira.tism.setState('busy', True)
-      response = await parsePrompt(moira, ctx, prompt.content)
-      if response:
-        await handleResponse(ctx, response)
-      else:
-        await texting(ctx)
-        await ctx.send(misc['failsafe'])
-    moira.tism.setState('busy', False)
+    if type(ctx.channel) == DMChannel:
+      await texting(ctx)
+      await ctx.send(misc['notInDMs'])
+
+    elif type(ctx.channel) == TextChannel:
+      await texting(ctx)
+      await ctx.send(choice(initialPrompt))
+
+      prompt = await waitingForInput(moira, ctx, user)
+      if prompt:
+        response = await parsePrompt(moira, ctx, prompt.content)
+        if response:
+          await handleResponse(ctx, response)
+        else:
+          await texting(ctx)
+          await ctx.send(misc['failsafe'])
+
+      if m.id in moira.mQ:
+        moira.tism.dequeue('promptQueue', chn, m)
+        moira.mQ.remove(m.id)
+
+      moira.tism.setState('busy', False)
+
+    else:
+      await texting(ctx)
+      await ctx.send(misc['notInOther'])
 
   else:
-    await texting(ctx)
-    await ctx.send(misc['notInOther'])
+    await ctx.send(choice(busyState))
+    moira.tism.queue('promptQueue', chn, m)
+    moira.mQ.append(m.id)
 
 moira.run(str(env.get('DISCORD_API_TOKEN')))

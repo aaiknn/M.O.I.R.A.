@@ -15,7 +15,7 @@ async def parsePrompt(self, ctx, prompt):
   openai.api_key = self.token
 
   ## defaults
-  max_tokens=250
+  max_tokens=50
 
   if 'information' or 'info' in prompt:
     engine='davinci'
