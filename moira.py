@@ -11,11 +11,14 @@ import logs.errors as ugh
 import logs.status as status
 import logs.warnings as warn
 from phrases.default import basicScriptFail, initialPrompt, misc
+
+from sessions.tism import TheInfamousStateMachine as TISM
+
 from utils.commands import waitingForInput
 from utils.db import DBSetup, dbConnect
 from utils.general import texting
 from utils.prompts import handleResponse, parsePrompt
-from utils.startup import dbSelftest, logStartup
+from utils.startup import dbSelftest, logStartupToDiscord
 
 load_dotenv()
 
@@ -56,33 +59,39 @@ moira.db = DBSetup(
 moira.nickname = moira_nickname
 moira.patience = moira_patience
 moira.permission_role = moira_permission_role
+moira.tism = TISM()
 moira.token = openai_api_token
 
 moira.remove_command("help")
 
+globalErrors = []
+globalWarnings = []
+
 @moira.event
 async def on_ready():
   print(status.discord_moira_onready.format(moira))
-  errors = []
-  warnings = []
 
-  await dbSelftest(moira, errors)
+  moira.tism.setState('dbC', await dbSelftest(moira, globalErrors))
 
   for meh in moira.db.errors:
-    print(meh)
+    globalErrors.append(meh)
 
   if not moira_permission_role:
-    warnings.append(f'Warning: {warn.moira_permissions_not_set}')
-    print(f'\nWarning: {warn.moira_permissions_not_set}')
+    globalWarnings.append(warn.moira_permissions_not_set)
 
   if not openai_api_token:
-    warnings.append(f'Warning: {warn.openai_token_not_set}')
-    print(f'\nWarning: {warn.openai_token_not_set}')
+    globalWarnings.append(warn.openai_token_not_set)
+
+  for f in globalErrors:
+    print(f'\n\x1b[1;31mError:\x1b[0m {f}')
   
+  for huh in globalWarnings:
+    print(f'\n\x1b[1;33mWarning:\x1b[0m {huh}')
+
   if moira_hooks_logs_id and moira_hooks_logs_token:
     webhookId = moira_hooks_logs_id
     webhookToken = moira_hooks_logs_token
-    await logStartup(webhookId, webhookToken, warnings)
+    await logStartupToDiscord(webhookId, webhookToken, globalErrors, globalWarnings)
 
 @moira.event
 async def on_command_error(ctx, err):
@@ -117,12 +126,14 @@ async def initialPrompting(ctx):
     await ctx.send(choice(initialPrompt))
     prompt = await waitingForInput(moira, ctx, user)
     if prompt:
+      moira.tism.setState('busy', True)
       response = await parsePrompt(moira, ctx, prompt.content)
       if response:
         await handleResponse(ctx, response)
       else:
         await texting(ctx)
         await ctx.send(misc['failsafe'])
+    moira.tism.setState('busy', False)
 
   else:
     await texting(ctx)

@@ -9,27 +9,34 @@ import logs.errors as ugh
 import logs.status as status
 from utils.webhooks import DiscordHooks
 
-async def dbSelftest(self, startupErrors):
+async def dbSelftest(self, scopedErrors):
   try:
     selftest = await self.db.selfTest()
+  except ConnectionAbortedError:
+    return False
   except:
-    print('Database isn\'t happy about your setup.')
+    return False
   else:
     if not selftest:
-      startupErrors.append(f'Error: {ugh.database_connection_error}')
-      print(f'\nError: {ugh.database_connection_error}')
+      scopedErrors.append(ugh.database_connection_error)
+      return False
 
-async def logStartup(id, token, warnings):
+    return True
+
+async def logStartupToDiscord(id, token, scopedErrors, scopedWarnings):
   s = ClientSession()
   async with s:
     t = timestamp()
-    startUpMessage=f'It\'s true.\nUTC Timestamp: {t.tm_mday}-{t.tm_mon}-{t.tm_year} at {t.tm_hour}:{t.tm_min}:{t.tm_sec}.'
-    if warnings:
-      for warning in warnings:
-        startUpMessage+=f'\n\n{warning}'
+    startUpMessage=status.discord_webhook_log_moira_up_message.format(t)
+    if scopedErrors or scopedWarnings:
+      for error in scopedErrors:
+        startUpMessage+=f'\n\n```diff\n- Error:\n```\n{error}'
+
+      for warning in scopedWarnings:
+        startUpMessage+=f'\n\n```fix\n- Warning:\n```\n{warning}'
 
     embed = Embed(
-      title=status.discord_webhook_log_moira_up,
+      title=status.discord_webhook_log_moira_up_title,
       description=startUpMessage
     )
     log = DiscordHooks(

@@ -2,6 +2,8 @@
 
 from pymongo import MongoClient
 
+import logs.errors as ugh
+
 class DBSetup:
   def __init__(self, domain, name, username, userpass, database, collection):
     self.cluster_name = name
@@ -16,7 +18,7 @@ class DBSetup:
       userpass
     ]:
       if not item:
-        self.errors.append(f'Uh-oh: A crucial env variable hasn\'t been set.')
+        self.errors.append(ugh.database_env_missing)
 
   async def selfTest(self):
     client = MongoClient(self.uri)
@@ -24,10 +26,20 @@ class DBSetup:
       db = client[self.db_name]
       db[self.coll_name]
     except:
-      return False
+      raise ConnectionAbortedError
     else:
       client.close
       return True
 
-async def dbConnect(self):
-  client = MongoClient(self.db.uri)
+async def dbConnect(handler, ctx):
+  client = MongoClient(handler.db.uri)
+
+  try:
+    db = client[handler.db.db_name]
+    db[handler.db.coll_name]
+  except:
+    return False
+  else:
+    await ctx.send('Connection successful.')
+    client.close
+    return True
