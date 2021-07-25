@@ -5,8 +5,19 @@ from discord import Embed
 from discord import AsyncWebhookAdapter
 from time import gmtime as timestamp
 
+import logs.errors as ugh
 import logs.status as status
 from utils.webhooks import DiscordHooks
+
+async def dbSelftest(self, startupErrors):
+  try:
+    selftest = await self.db.selfTest()
+  except:
+    print('Database isn\'t happy about your setup.')
+  else:
+    if not selftest:
+      startupErrors.append(f'Error: {ugh.database_connection_error}')
+      print(f'\nError: {ugh.database_connection_error}')
 
 async def logStartup(id, token, warnings):
   s = ClientSession()

@@ -45,6 +45,7 @@ save = [
   'keep',
   'save',
   'store',
+  'persist',
   'remember'
 ]
 

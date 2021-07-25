@@ -12,9 +12,10 @@ import logs.status as status
 import logs.warnings as warn
 from phrases.default import basicScriptFail, initialPrompt, misc
 from utils.commands import waitingForInput
+from utils.db import DBSetup, dbConnect
 from utils.general import texting
 from utils.prompts import handleResponse, parsePrompt
-from utils.startup import logStartup
+from utils.startup import dbSelftest, logStartup
 
 load_dotenv()
 
@@ -24,6 +25,13 @@ moira_nickname = str(env.get('MOIRA_NICKNAME'))
 moira_patience = int(env.get('MOIRA_MAX_PROMPT_LOOPS'))
 moira_permission_role = str(env.get('MOIRA_PERM_ROLE'))
 moira_prefix = str(env.get('MOIRA_PREFIX'))
+
+mongodb_cluster_domain = env.get('MONGODB_CLUSTER_DOMAIN')
+mongodb_cluster_name = env.get('MONGODB_CLUSTER_NAME')
+mongodb_cluster_username = env.get('MONGODB_CLUSTER_USERNAME')
+mongodb_cluster_userpass = env.get('MONGODB_CLUSTER_USERPASS')
+mongodb_db_general = env.get('MONGODB_DB_GENERAL')
+mongodb_collection_general = env.get('MONGODB_DB_GENERAL_COLLECTION')
 
 openai_api_token = str(env.get('OPENAI_API_TOKEN'))
 
@@ -36,6 +44,15 @@ moira = commands.Bot(
   intents=intents
 )
 
+moira.db = DBSetup(
+  mongodb_cluster_domain,
+  mongodb_cluster_name,
+  mongodb_cluster_username,
+  mongodb_cluster_userpass,
+  mongodb_db_general,
+  mongodb_collection_general
+)
+
 moira.nickname = moira_nickname
 moira.patience = moira_patience
 moira.permission_role = moira_permission_role
@@ -46,7 +63,13 @@ moira.remove_command("help")
 @moira.event
 async def on_ready():
   print(status.discord_moira_onready.format(moira))
+  errors = []
   warnings = []
+
+  await dbSelftest(moira, errors)
+
+  for meh in moira.db.errors:
+    print(meh)
 
   if not moira_permission_role:
     warnings.append(f'Warning: {warn.moira_permissions_not_set}')
