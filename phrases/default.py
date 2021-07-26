@@ -48,22 +48,31 @@ consentualBye = [
 
 initialPrompt = [
   "Alright?",
+  "Go ahead.",
+  "Go on...",
   "Hello! What do you need?",
   "Hey, what's up?",
   "Hi!",
   "I'm here.",
   "I'm listening.",
+  "Listening.",
   "Present.",
+  "Present and accounted for.",
   "Ready.",
   "Shoot.",
   "Speak of the devil!\nWhat's up?",
+  "State your business.",
   "Sup?",
   "What can I do for you?",
+  "What can I help you with?",
   "What do you have on your mind?",
   "What do you need?",
   "What have you got for me?",
+  "What is it that you need from me?",
   "Ya.",
-  "Yeah, I'm here."
+  "Ya?",
+  "Yeah, I'm here.",
+  "Yup."
 ]
 
 onesidedBye = [
@@ -72,8 +81,13 @@ onesidedBye = [
 ]
 
 permissionDenied = [
-  "Awfully sorry, mate.",
-  "Permission denied"
+  "Awfully sorry, mate. Process cancelled.",
+  "Gotcha. Not proceeding.",
+  "It's not in my hands. \U0001F937\nQuery aborted.",
+  "Not my call. Stopping.",
+  "Permission denied.",
+  "Tough. I'll stop here.",
+  "Understood. Cancelling process."
 ]
 
 promptTimeout = [
