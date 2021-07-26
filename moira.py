@@ -22,6 +22,14 @@ from utils.startup import dbSelftest, logStartupToDiscord
 
 load_dotenv()
 
+if not env.get('NO_COLOR'):
+  boldred = '\x1b[1;31m'
+  boldyellow = '\x1b[1;33m'
+  colourend = '\x1b[0m'
+else:
+  boldred, boldyellow, colourend = '', '', ''
+colorend = colourend
+
 moira_hooks_logs_id = str(env.get('MOIRA_WEBHOOKS_LOGS_ID'))
 moira_hooks_logs_token = str(env.get('MOIRA_WEBHOOKS_LOGS_TOKEN'))
 moira_nickname = str(env.get('MOIRA_NICKNAME'))
@@ -86,10 +94,10 @@ async def on_ready():
     globalWarnings.append(warn.openai_token_not_set)
 
   for f in globalErrors:
-    print(f'\n\x1b[1;31mError:\x1b[0m {f}')
+    print(f'\n{boldred}Error:{colorend} {f}')
   
   for huh in globalWarnings:
-    print(f'\n\x1b[1;33mWarning:\x1b[0m {huh}')
+    print(f'\n{boldyellow}Warning:{colorend} {huh}')
 
   if moira_hooks_logs_id and moira_hooks_logs_token:
     webhookId = moira_hooks_logs_id
