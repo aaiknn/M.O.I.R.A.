@@ -66,3 +66,5 @@ async def waitingForInput(self, ctx, user):
         req = await requestPermission(self, ctx)
         if req:
           return prompt
+
+      break
