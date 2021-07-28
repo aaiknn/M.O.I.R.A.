@@ -24,11 +24,20 @@ basicScriptFail = [
 ]
 
 beforeResearch = [
+  "Diving into that now.",
+  "Doing the research now.",
+  "Finding you an answer now.",
   "Give me a minute here...",
+  "Going for it.",
   "Hang on, let's see...",
   "Hold my beer.",
   "I'll be back with you in a moment.",
+  "I'm having a look at it, one moment.",
   "I'm on it!",
+  "Let me see if I can't find you anything good.",
+  "Looking into it now.",
+  "On it!",
+  "One moment, please.",
   "Piece of cake, just a sec..."
 ]
 
@@ -47,6 +56,7 @@ consentualBye = [
 ]
 
 initialPrompt = [
+  "All set!",
   "Alright?",
   "Go ahead.",
   "Go on...",
@@ -58,6 +68,7 @@ initialPrompt = [
   "Listening.",
   "Present.",
   "Present and accounted for.",
+  "Pronta.",
   "Ready.",
   "Shoot.",
   "Speak of the devil!\nWhat's up?",
@@ -77,17 +88,49 @@ initialPrompt = [
 
 onesidedBye = [
   "I'll go stand over there for a bit.",
-  "Just call me once you got there."
+  "Just call me once you got there.",
+  "You won't be able to see it, but I'm going to wave you a good-bye here."
 ]
 
 permissionDenied = [
   "Awfully sorry, mate. Process cancelled.",
-  "Gotcha. Not proceeding.",
+  "Cancelling process.",
+  "Halting.",
   "It's not in my hands. \U0001F937\nQuery aborted.",
-  "Not my call. Stopping.",
+  "I see. Not my call. Stopping.",
+  "Not proceeding.",
   "Permission denied.",
-  "Tough. I'll stop here.",
-  "Understood. Cancelling process."
+  "Process aborted.",
+  "Process stopped.",
+  "That's tough. I'll stop here."
+]
+
+permissionGranted = [
+  "Continuing.",
+  "Proceeding."
+]
+
+decisionReceived = [
+  "Alea iacta est.",
+  "Alright.",
+  "Check.",
+  "Gotcha.",
+  "Got it.",
+  "Hm-mm.",
+  "OK.",
+  "Okay.",
+  "Right.",
+  "U-huh.",
+  "Understood.",
+  "Ya.",
+  "You're the boss, boss."
+]
+
+processSuspended = [
+  "Halted it. Waiting to continue.",
+  "Keeping it in.",
+  "Pausing.",
+  "Process suspended."
 ]
 
 promptTimeout = [
