@@ -14,7 +14,7 @@ from phrases.default import basicScriptFail, busyState, initialPrompt, misc
 
 from sessions.tism import TheInfamousStateMachine as TISM
 
-from utils.commands import waitingForInput
+from utils.commands import waitingForAuthorisedPrompt
 from utils.db import DBSetup
 from utils.general import texting
 from utils.prompts import handleResponse, parsePrompt
@@ -73,6 +73,12 @@ moira.token = openai_api_token
 
 moira.remove_command("help")
 
+moira.tism.setState(
+  'subroutines', {
+    'AI': 'DOWN',
+    'DB': 'DOWN'
+})
+
 globalErrors = []
 globalWarnings = []
 
@@ -80,9 +86,10 @@ globalWarnings = []
 async def on_ready():
   print(status.discord_moira_onready.format(moira))
 
-  moira.tism.setState('dbC', await dbSelftest(moira, globalErrors))
   moira.tism.setState('busy', False)
   moira.tism.setState('promptQueue', {})
+
+  await dbSelftest(moira, globalErrors)
 
   for meh in moira.db.errors:
     globalErrors.append(meh)
@@ -115,7 +122,7 @@ async def on_error():
 @moira.event
 async def on_message(message):
   if message.author == moira.user:
-      return
+    return
   
   if not message.content.startswith(moira_prefix):
     if moira.nickname in message.content:
@@ -141,7 +148,7 @@ async def initialPrompting(ctx):
       await texting(ctx)
       await ctx.send(choice(initialPrompt))
 
-      prompt = await waitingForInput(moira, ctx, user)
+      prompt = await waitingForAuthorisedPrompt(moira, ctx, user)
       if prompt:
         response = await parsePrompt(moira, ctx, prompt.content)
         if response:

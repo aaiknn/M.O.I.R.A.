@@ -42,7 +42,7 @@ async def requestPermission(self, ctx):
   else:
     return perm
 
-async def waitingForInput(self, ctx, user):
+async def waitingForAuthorisedPrompt(self, ctx, user):
   def check(m):
     return m.author == user
 

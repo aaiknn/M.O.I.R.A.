@@ -13,15 +13,17 @@ async def dbSelftest(self, scopedErrors):
   try:
     selftest = await self.db.selfTest()
   except ConnectionAbortedError:
-    return False
+    self.tism.setSystemState('DB', 'DOWN')
+    scopedErrors.append(ugh.database_connection_aborted_error)
   except:
-    return False
+    self.tism.setSystemState('DB', 'DOWN')
+    scopedErrors.append(ugh.database_connection_error)
   else:
     if not selftest:
-      scopedErrors.append(ugh.database_connection_error)
-      return False
+      self.tism.setSystemState('DB', 'DOWN')
+      scopedErrors.append(ugh.database_connection_error_unknown)
 
-    return True
+    self.tism.setSystemState('DB', 'UP')
 
 async def logStartupToDiscord(id, token, scopedErrors, scopedWarnings):
   s = ClientSession()
