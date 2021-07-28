@@ -10,11 +10,11 @@ class TheInfamousStateMachine:
   def setState(self, key, val):
     self.state.update({key: val})
 
-  def setSystemState(self, key, val):
-    self.state['subroutines'][key] = val
-
   def getSystemState(self, key):
     return self.state['subroutines'][key]
+
+  def setSystemState(self, key, val):
+    self.state['subroutines'][key] = val
 
   def queue(self, queueKey, key, val):
     l = self.state[queueKey].get(key)
