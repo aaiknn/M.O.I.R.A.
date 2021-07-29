@@ -97,7 +97,7 @@ permissionDenied = [
   "Cancelling process.",
   "Halting.",
   "It's not in my hands. \U0001F937\nQuery aborted.",
-  "I see. Not my call. Stopping.",
+  "Not my call. Stopping.",
   "Not proceeding.",
   "Permission denied.",
   "Process aborted.",
@@ -107,7 +107,12 @@ permissionDenied = [
 
 permissionGranted = [
   "Continuing.",
-  "Proceeding."
+  "Going in.",
+  "Keeping at it.",
+  "Not stopping.",
+  "Proceeding.",
+  "Pursuing the inquiry.",
+  "Resuming."
 ]
 
 decisionReceived = [
@@ -151,5 +156,13 @@ requestTimeout = [
 ]
 
 requestPermission = [
+  "Am I allowed to as well?",
+  "Do I have permission to answer?",
+  "Is that something that I am allowed to dig into?",
+  "May I proceed with this?",
   "Requesting permission to do so."
+]
+
+zerosidedBye = [
+  "I'm not here for that."
 ]

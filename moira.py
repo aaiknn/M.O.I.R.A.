@@ -10,14 +10,15 @@ from time import sleep
 import logs.errors as ugh
 import logs.status as status
 import logs.warnings as warn
-from phrases.default import basicScriptFail, busyState, initialPrompt, misc
+from phrases.default import basicScriptFail, busyState, initialPrompt, misc, zerosidedBye
 
 from sessions.tism import TheInfamousStateMachine as TISM
 
-from utils.commands import waitingForAuthorisedPrompt
+from utils.commands import waitForAuthorisedPrompt
 from utils.db import DBSetup
 from utils.general import texting
 from utils.prompts import handleResponse, parsePrompt
+from utils.qualification import logStrongEmotionsToDiscord as stormoff, qualifyInput, waitForQualificationInput
 from utils.startup import dbSelftest, logStartupToDiscord
 
 load_dotenv()
@@ -32,6 +33,8 @@ colorend = colourend
 
 moira_hooks_logs_id = str(env.get('MOIRA_WEBHOOKS_LOGS_ID'))
 moira_hooks_logs_token = str(env.get('MOIRA_WEBHOOKS_LOGS_TOKEN'))
+moira_hooks_open_logs_id = str(env.get('MOIRA_WEBHOOKS_OPEN_LOGS_ID'))
+moira_hooks_open_logs_token = str(env.get('MOIRA_WEBHOOKS_OPEN_LOGS_TOKEN'))
 moira_nickname = str(env.get('MOIRA_NICKNAME'))
 moira_patience = int(env.get('MOIRA_MAX_PROMPT_LOOPS'))
 moira_permission_role = str(env.get('MOIRA_PERM_ROLE'))
@@ -86,7 +89,9 @@ globalWarnings = []
 async def on_ready():
   print(status.discord_moira_onready.format(moira))
 
+  moira.tism.setState('angryAt', {'Larry': 'I just don\'t like Larry.'})
   moira.tism.setState('busy', False)
+  moira.tism.setState('busyWith', '')
   moira.tism.setState('promptQueue', {})
 
   await dbSelftest(moira, globalErrors)
@@ -137,6 +142,9 @@ async def initialPrompting(ctx):
   m = ctx.message
   chn = ctx.channel.name
 
+  if user.id in moira.tism.state['angryAt'] and len(moira.tism.state['angryAt'][user.id]) > 0:
+    return
+
   if moira.tism.state['busy'] == False:
     moira.tism.setState('busy', True)
 
@@ -148,7 +156,40 @@ async def initialPrompting(ctx):
       await texting(ctx)
       await ctx.send(choice(initialPrompt))
 
-      prompt = await waitingForAuthorisedPrompt(moira, ctx, user)
+      topic = await waitForQualificationInput(moira, ctx, user)
+
+      try:
+        await qualifyInput(moira, topic.content)
+      except InterruptedError:
+        moira.tism.setState('busy', False)
+        return
+      except ModuleNotFoundError:
+        print('Oh no')
+      except NotImplementedError:
+        print('Oh no no')
+      except TypeError:
+        # TODO: rework this.
+        await texting(ctx, 2)
+        await ctx.send(choice(zerosidedBye))
+
+        reason = 'Not my type.'
+        moira.tism.queue('angryAt', user.id, reason)
+
+        if moira_hooks_open_logs_id and moira_hooks_open_logs_token:
+          webhookId = moira_hooks_open_logs_id
+          webhookToken = moira_hooks_open_logs_token
+          await stormoff(webhookId, webhookToken, moira.nickname, user.name, 1)
+
+        sleep(60 * 1)
+
+        moira.tism.dequeue('angryAt', user.id, reason)
+      except:
+        print('Oh no no no')
+      else:
+        matter = moira.tism.getState('busyWith')
+        await ctx.send(matter)
+
+      prompt = await waitForAuthorisedPrompt(moira, ctx, user)
       if prompt:
         response = await parsePrompt(moira, ctx, prompt.content)
         if response:

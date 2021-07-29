@@ -3,8 +3,8 @@
 from asyncio import TimeoutError
 from random import choice
 
-from phrases.default import decisionReceived, onesidedBye, permissionDenied, promptTimeout, requestPermission as reqPerm, requestTimeout
-from phrases.userIntention import confirm, reject
+from intentions.commands import confirm, reject
+from phrases.default import decisionReceived, onesidedBye, permissionDenied, permissionGranted, promptTimeout, requestPermission as reqPerm, requestTimeout
 from utils.general import texting
 
 def checkForPermission(self, user):
@@ -41,10 +41,10 @@ async def requestPermission(self, ctx):
     return False
   else:
     await texting(ctx)
-    await ctx.send(choice(decisionReceived))
+    await ctx.send(f'{choice(decisionReceived)} {choice(permissionGranted)}')
     return perm
 
-async def waitingForAuthorisedPrompt(self, ctx, user):
+async def waitForAuthorisedPrompt(self, ctx, user):
   def check(m):
     return m.author == user
 
