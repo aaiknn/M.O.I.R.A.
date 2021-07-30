@@ -19,17 +19,11 @@ from utils.db import DBSetup
 from utils.general import texting
 from utils.prompts import handleResponse, parsePrompt
 from utils.qualification import logStrongEmotionsToDiscord as stormoff, qualifyInput, waitForQualificationInput
-from utils.startup import dbSelftest, logStartupToDiscord
+from utils.startup import dbSelftest, logTests
 
 load_dotenv()
 
-if not env.get('NO_COLOR'):
-  boldred = '\x1b[1;31m'
-  boldyellow = '\x1b[1;33m'
-  colourend = '\x1b[0m'
-else:
-  boldred, boldyellow, colourend = '', '', ''
-colorend = colourend
+noColour = env.get('NO_COLOR')
 
 moira_hooks_logs_id = str(env.get('MOIRA_WEBHOOKS_LOGS_ID'))
 moira_hooks_logs_token = str(env.get('MOIRA_WEBHOOKS_LOGS_TOKEN'))
@@ -105,16 +99,7 @@ async def on_ready():
   if not openai_api_token:
     globalWarnings.append(warn.openai_token_not_set)
 
-  for f in globalErrors:
-    print(f'\n{boldred}Error:{colorend} {f}')
-  
-  for huh in globalWarnings:
-    print(f'\n{boldyellow}Warning:{colorend} {huh}')
-
-  if moira_hooks_logs_id and moira_hooks_logs_token:
-    webhookId = moira_hooks_logs_id
-    webhookToken = moira_hooks_logs_token
-    await logStartupToDiscord(webhookId, webhookToken, globalErrors, globalWarnings)
+  await logTests(noColour, globalErrors, globalWarnings, moira_hooks_logs_id, moira_hooks_logs_token)
 
 @moira.event
 async def on_command_error(ctx, err):

@@ -7,6 +7,7 @@ from time import gmtime as timestamp
 
 import logs.errors as ugh
 import logs.status as status
+from utils.general import getTermColour
 from utils.webhooks import DiscordHooks
 
 async def dbSelftest(self, scopedErrors):
@@ -25,6 +26,20 @@ async def dbSelftest(self, scopedErrors):
 
     self.tism.setSystemState('DB', 'UP')
 
+async def logTests(noColour, scopedErrors, scopedWarnings, webhookId, webhookToken):
+  boldred = getTermColour('boldred', noColour)
+  boldyellow = getTermColour('boldyellow', noColour)
+  colourend = getTermColour('colourend', noColour)
+
+  for f in scopedErrors:
+    print(f'\n{boldred}Error:{colourend} {f}')
+
+  for huh in scopedWarnings:
+    print(f'\n{boldyellow}Warning:{colourend} {huh}')
+
+  if webhookId and webhookToken:
+    await logStartupToDiscord(webhookId, webhookToken, scopedErrors, scopedWarnings)
+
 async def logStartupToDiscord(id, token, scopedErrors, scopedWarnings):
   s = ClientSession()
   async with s:
@@ -38,10 +53,10 @@ async def logStartupToDiscord(id, token, scopedErrors, scopedWarnings):
 
     if scopedErrors or scopedWarnings:
       for error in scopedErrors:
-        startUpMessage+=f'\n\n```diff\n- Error\n```\n{error}'
+        startUpMessage+=f'\n\n```diff\n- Error -\n```\n{error}'
 
       for warning in scopedWarnings:
-        startUpMessage+=f'\n\n```fix\n- Warning\n```\n{warning}'
+        startUpMessage+=f'\n\n```fix\n- Warning -\n```\n{warning}'
 
     embed = Embed(
       color=colourCode,
