@@ -30,14 +30,21 @@ async def logStartupToDiscord(id, token, scopedErrors, scopedWarnings):
   async with s:
     t = timestamp()
     startUpMessage=status.discord_webhook_log_moira_up_message.format(t)
+    colourCode=0x7a2faf
+    if len(scopedWarnings) > 0:
+      colourCode=0xfffa38
+    if len(scopedErrors) > 0:
+      colourCode=0xff4238
+
     if scopedErrors or scopedWarnings:
       for error in scopedErrors:
-        startUpMessage+=f'\n\n```diff\n- Error:\n```\n{error}'
+        startUpMessage+=f'\n\n```diff\n- Error\n```\n{error}'
 
       for warning in scopedWarnings:
-        startUpMessage+=f'\n\n```fix\n- Warning:\n```\n{warning}'
+        startUpMessage+=f'\n\n```fix\n- Warning\n```\n{warning}'
 
     embed = Embed(
+      color=colourCode,
       title=status.discord_webhook_log_moira_up_title,
       description=startUpMessage
     )

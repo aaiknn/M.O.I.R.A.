@@ -26,7 +26,6 @@ async def waitForQualificationInput(self, ctx, user):
     return topic
 
 async def qualifyInput(self, topic):
-
   if any(word in topic for word in sysinfo):
     return 'SYSINFO'
 
@@ -55,8 +54,10 @@ async def logStrongEmotionsToDiscord(id, token, name, username, duration):
   s = ClientSession()
   async with s:
     message=status.discord_webhook_log_moira_not_listening.format(name, username, duration)
+    colourCode=0x7a2faf
 
     embed = Embed(
+      color=colourCode,
       title=status.discord_webhook_log_moira_not_listening_title,
       description=message
     )
