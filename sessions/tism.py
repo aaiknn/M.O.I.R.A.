@@ -42,6 +42,20 @@ class TheInfamousStateMachine:
       self.state['busyWith'][channelKey] = {userRole: userId}
     return self.state['busyWith'][channelKey]
 
+  def addToSessionState(self, channelKey, key, val):
+    state = self.state['busyWith'][channelKey]
+    if key in state:
+      raise LookupError
+    else:
+      state.update({key: val})
+
+  def updateSessionState(self, channelKey, key, val):
+    state = self.state['busyWith'][channelKey]
+    if key in state:
+      state.update({key: val})
+    else:
+      raise KeyError
+
   def resetSessionState(self):
     self.state['busyWith'] = {}
     return self.state['busyWith']

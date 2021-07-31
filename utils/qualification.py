@@ -19,19 +19,19 @@ async def waitForQualificationInput(self, ctx, user):
   else:
     return topic
 
-async def qualifyInput(self, topic):
+async def qualifyInput(self, chid, topic):
   if any(word in topic for word in sysinfo):
     return 'SYSINFO'
 
   elif any(word in topic for word in ai):
-    if self.tism.getState('AI') == 'UP':
-      self.tism.setState('busyWith', 'AI')
+    if self.tism.getSystemState('AI') == 'UP':
+      self.tism.addToSessionState(chid, 'active_subroutine', 'AI')
     else:
       raise ModuleNotFoundError
 
   elif any(word in topic for word in eonet):
-    if self.tism.getState('EONET') == 'UP':
-      self.tism.setState('busyWith', 'EONET')
+    if self.tism.getSystemState('EONET') == 'UP':
+      self.tism.addToSessionState(chid, 'active_subroutine', 'EONET')
     else:
       raise ModuleNotFoundError
 

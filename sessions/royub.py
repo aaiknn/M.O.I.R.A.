@@ -53,7 +53,7 @@ class RoyUB(EventManager):
 
     client.tism.queue('angryAt', ctx.author.id, reason)
     if self.mode == 'verbal' and self.webhook['id'] and self.webhook['token']:
-      await self.logToDiscord('you', duration)
+      await self.logToDiscord(ctx.author.name, duration)
     print(log.client_now_angry.format(client.nickname, ctx.author.name, duration, reason))
 
     time = (60 * duration)

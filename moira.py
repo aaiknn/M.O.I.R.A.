@@ -209,7 +209,7 @@ async def initialPrompting(ctx):
     topic = await waitForQualificationInput(moira, ctx, user)
 
     try:
-      await qualifyInput(moira, topic.content)
+      await qualifyInput(moira, chid, topic.content)
 
     except InterruptedError:
       await ctx.send(choice(nevermindedThen))
@@ -249,10 +249,6 @@ async def initialPrompting(ctx):
       moira.tism.setBusyState(chid, 'FALSE')
       moira.tism.setSessionState(chid, None)
       return
-
-    else:
-      matter = moira.tism.getSessionState(chid)
-      await ctx.send(matter)
 
     prompt = await waitForAuthorisedPrompt(moira, ctx, user)
     if prompt:
