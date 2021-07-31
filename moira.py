@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 import logs.errors as ugh
 import logs.status as status
 import logs.warnings as warn
-from phrases.default import basicScriptFail, busyState, initialPrompt, misc, zerosidedBye
+from phrases.default import basicScriptFail, busyState as busyPhrase, initialPrompt, misc, nevermindedThen, subroutineUnreachable as currentlyNot, unsureAboutQualifiedTopic as unsure, zerosidedBye
 
 from sessions.royub import Event, RoyUB
 from sessions.tism import TheInfamousStateMachine as TISM
@@ -35,8 +35,10 @@ moira_hooks_open_logs_id = str(env.get('MOIRA_WEBHOOKS_OPEN_LOGS_ID'))
 moira_hooks_open_logs_token = str(env.get('MOIRA_WEBHOOKS_OPEN_LOGS_TOKEN'))
 moira_nickname = str(env.get('MOIRA_NICKNAME'))
 moira_patience = int(env.get('MOIRA_MAX_PROMPT_LOOPS'))
-moira_permission_role = str(env.get('MOIRA_PERM_ROLE'))
 moira_prefix = str(env.get('MOIRA_PREFIX'))
+
+moira_administrator_role = str(env.get('MOIRA_ADMIN_ROLE'))
+moira_user_role = str(env.get('MOIRA_USER_ROLE'))
 
 mongodb_cluster_domain = env.get('MONGODB_CLUSTER_DOMAIN')
 mongodb_cluster_name = env.get('MONGODB_CLUSTER_NAME')
@@ -49,6 +51,7 @@ openai_api_token = str(env.get('OPENAI_API_TOKEN'))
 
 # GLOBALS
 globalErrors = []
+globalStatus = []
 globalWarnings = []
 
 intents = Intents.default()
@@ -69,9 +72,11 @@ moira.db = DBSetup(
   mongodb_collection_general
 )
 
+moira.administrator = moira_administrator_role
+moira.regularUser = moira_user_role
+
 moira.nickname = moira_nickname
 moira.patience = moira_patience
-moira.permission_role = moira_permission_role
 moira.mQ = []
 moira.tism = TISM()
 moira.tism.setState(
@@ -103,8 +108,8 @@ async def on_ready():
   print(status.discord_moira_onready.format(moira))
 
   moira.tism.setState('angryAt', {prefs.mPref_larry_name: prefs.mPref_larry_reason})
-  moira.tism.setState('busy', False)
-  moira.tism.setState('busyWith', None)
+  moira.tism.resetBusyState()
+  moira.tism.resetSessionState()
   moira.tism.setState('promptQueue', {})
 
   await dbSelftest(moira, globalErrors)
@@ -112,16 +117,21 @@ async def on_ready():
   for meh in moira.db.errors:
     globalErrors.append(meh)
 
-  if not moira_permission_role:
-    globalWarnings.append(warn.moira_permissions_not_set)
+  if not moira.administrator and not moira.regularUser:
+    globalWarnings.append(warn.moira_admin_and_user_not_set)
+  elif not moira.administrator:
+    globalStatus.append(status.moira_admin_not_set)
+  elif not moira.regularUser:
+    globalStatus.append(status.moira_user_not_set)
 
-  if not openai_api_token:
+  if not moira.token:
     globalWarnings.append(warn.openai_token_not_set)
 
   await logTests(
     noColour,
     globalErrors,
     globalWarnings,
+    globalStatus,
     moira.webhook
   )
 
@@ -153,81 +163,117 @@ async def on_message(message):
 async def initialPrompting(ctx):
   user = ctx.author
   m = ctx.message
-  chn = ctx.channel.name
+  chid = ctx.channel.id
 
   angryState = user.id in moira.tism.state['angryAt'] and len(moira.tism.state['angryAt'][user.id]) > 0
   if angryState:
     return
 
-  if moira.tism.state['busy'] == False:
-    moira.tism.setState('busy', True)
-    moira.tism.setState('busyWith', user.id)
+  busyState = moira.tism.getBusyState(chid)
+  if busyState != 'FALSE':
+    await ctx.send(choice(busyPhrase))
+    moira.tism.queue('promptQueue', chid, m)
+    moira.mQ.append(m.id)
+    return
 
-    if type(ctx.channel) == DMChannel:
-      await texting(ctx)
-      await ctx.send(misc['notInDMs'])
+  roleCheck = False
+  userRole = None
 
-    elif type(ctx.channel) == TextChannel:
-      await texting(ctx)
-      await ctx.send(choice(initialPrompt))
-      topic = await waitForQualificationInput(moira, ctx, user)
+  if moira.administrator:
+    for entry in user.roles:
+      if str(moira.administrator) in str(entry.name):
+        roleCheck = True
+        userRole = 'admin'
+        break
 
-      try:
-        await qualifyInput(moira, topic.content)
+  if moira.regularUser and not userRole:
+    for entry in user.roles:
+      if str(moira.regularUser) in str(entry.name):
+        roleCheck = True
+        userRole = 'regular'
+        break
 
-      except InterruptedError:
-        moira.tism.setState('busy', False)
-        moira.tism.setState('busyWith', None)
-        return
+    if not roleCheck:
+      return
+  else:
+    return
 
-      except ModuleNotFoundError:
-        print('Oh no')
+  moira.tism.setBusyState(chid, user.id)
+  moira.tism.setSessionState(chid, userRole, user.id)
 
-      except NotImplementedError:
-        print('Oh no no')
+  if type(ctx.channel) == DMChannel:
+    await texting(ctx)
+    await ctx.send(misc['notInDMs'])
 
-      except TypeError:
-        reason = prefs.mPref_wrongType
-        duration = 4
-        await texting(ctx, 2)
-        await ctx.send(choice(zerosidedBye))
-        e = Event('stormoff')
-        await e.run(ctx, reason, duration)
-        return
+  elif type(ctx.channel) == TextChannel:
+    await texting(ctx)
+    await ctx.send(choice(initialPrompt))
+    topic = await waitForQualificationInput(moira, ctx, user)
 
-      except TimeoutError:
-        print('Prompt timeout.')
+    try:
+      await qualifyInput(moira, topic.content)
 
-      except:
-        print('Oh no no no. (This message is really hardly ever printed. Have fun troubleshooting!)')
+    except InterruptedError:
+      await ctx.send(choice(nevermindedThen))
+      moira.tism.setBusyState(chid, 'FALSE')
+      moira.tism.setSessionState(chid, None)
+      return
 
-      else:
-        matter = moira.tism.getState('busyWith')
-        await ctx.send(matter)
+    except ModuleNotFoundError:
+      await ctx.send(choice(currentlyNot))
+      moira.tism.setBusyState(chid, 'FALSE')
+      moira.tism.setSessionState(chid, None)
+      return
 
-      prompt = await waitForAuthorisedPrompt(moira, ctx, user)
-      if prompt:
-        response = await parsePrompt(moira, ctx, prompt.content)
-        if response:
-          await handleResponse(ctx, response)
-        else:
-          await texting(ctx)
-          await ctx.send(misc['failsafe'])
+    except NotImplementedError:
+      await ctx.send(choice(unsure))
+      moira.tism.setBusyState(chid, 'FALSE')
+      moira.tism.setSessionState(chid, None)
+      return
 
-      if m.id in moira.mQ:
-        moira.tism.dequeue('promptQueue', chn, m)
-        moira.mQ.remove(m.id)
+    except TypeError:
+      reason = prefs.mPref_wrongType
+      duration = 4
+      await texting(ctx, 2)
+      await ctx.send(choice(zerosidedBye))
+      e = Event('stormoff')
+      await e.run(ctx, reason, duration)
+      return
 
-      moira.tism.setState('busy', False)
-      moira.tism.setState('busyWith', None)
+    except TimeoutError:
+      print('Prompt timeout.')
+      moira.tism.setBusyState(chid, 'FALSE')
+      moira.tism.setSessionState(chid, None)
+      return
+
+    except:
+      print('Oh no no no. (This message is really hardly ever printed. Have fun troubleshooting!)')
+      moira.tism.setBusyState(chid, 'FALSE')
+      moira.tism.setSessionState(chid, None)
+      return
 
     else:
-      await texting(ctx)
-      await ctx.send(misc['notInOther'])
+      matter = moira.tism.getSessionState(chid)
+      await ctx.send(matter)
+
+    prompt = await waitForAuthorisedPrompt(moira, ctx, user)
+    if prompt:
+      response = await parsePrompt(moira, ctx, prompt.content)
+      if response:
+        await handleResponse(ctx, response)
+      else:
+        await texting(ctx)
+        await ctx.send(misc['failsafe'])
+
+    if m.id in moira.mQ:
+      moira.tism.dequeue('promptQueue', chid, m)
+      moira.mQ.remove(m.id)
+
+    moira.tism.setBusyState(chid, False)
+    moira.tism.setSessionState(chid, None)
 
   else:
-    await ctx.send(choice(busyState))
-    moira.tism.queue('promptQueue', chn, m)
-    moira.mQ.append(m.id)
+    await texting(ctx)
+    await ctx.send(misc['notInOther'])
 
 moira.run(str(env.get('DISCORD_API_TOKEN')))

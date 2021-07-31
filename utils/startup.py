@@ -7,7 +7,7 @@ from time import gmtime as timestamp
 
 import logs.errors as ugh
 import logs.status as status
-from utils.general import getTermColour
+from utils.general import getTermStyle
 from utils.webhooks import DiscordHooks
 
 async def dbSelftest(self, scopedErrors):
@@ -26,10 +26,11 @@ async def dbSelftest(self, scopedErrors):
     else:
       self.tism.setSystemState('DB', 'UP')
 
-async def logTests(noColour, scopedErrors, scopedWarnings, webhook):
-  boldred = getTermColour('boldred', noColour)
-  boldyellow = getTermColour('boldyellow', noColour)
-  colourend = getTermColour('colourend', noColour)
+async def logTests(noColour, scopedErrors, scopedWarnings, scopedStatus, webhook):
+  boldred = getTermStyle('boldred', noColour)
+  boldyellow = getTermStyle('boldyellow', noColour)
+  bold = getTermStyle('bold', noColour)
+  colourend = getTermStyle('colourend', noColour)
 
   for f in scopedErrors:
     print(f'\n{boldred}Error:{colourend} {f}')
@@ -37,10 +38,13 @@ async def logTests(noColour, scopedErrors, scopedWarnings, webhook):
   for huh in scopedWarnings:
     print(f'\n{boldyellow}Warning:{colourend} {huh}')
 
-  if webhook['id'] and webhook['token']:
-    await logStartupToDiscord(webhook, scopedErrors, scopedWarnings)
+  for fact in scopedStatus:
+    print(f'\n{bold}Status:{colourend} {fact}')
 
-async def logStartupToDiscord(webhook, scopedErrors, scopedWarnings):
+  if webhook['id'] and webhook['token']:
+    await logStartupToDiscord(webhook, scopedErrors, scopedWarnings, scopedStatus)
+
+async def logStartupToDiscord(webhook, scopedErrors, scopedWarnings, scopedStatus):
   s = ClientSession()
   async with s:
     t = timestamp()
@@ -51,12 +55,15 @@ async def logStartupToDiscord(webhook, scopedErrors, scopedWarnings):
     if len(scopedErrors) > 0:
       colourCode=0xff4238
 
-    if scopedErrors or scopedWarnings:
+    if scopedErrors or scopedWarnings or scopedStatus:
       for error in scopedErrors:
         startUpMessage+=f'\n\n```diff\n- Error -\n```\n{error}'
 
       for warning in scopedWarnings:
         startUpMessage+=f'\n\n```fix\n- Warning -\n```\n{warning}'
+
+      for fact in scopedStatus:
+        startUpMessage+=f'\n\n```txt\n- Status -\n```\n{fact}'
 
     embed = Embed(
       color=colourCode,

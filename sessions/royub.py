@@ -48,8 +48,8 @@ class RoyUB(EventManager):
 
   async def memberTimeout(self, ctx, reason, duration):
     client = self.client
-    client.tism.setState('busy', False)
-    client.tism.setState('busyWith', None)
+    client.tism.setBusyState(ctx.channel.id, 'FALSE')
+    client.tism.setSessionState(ctx.channel.id, None)
 
     client.tism.queue('angryAt', ctx.author.id, reason)
     if self.mode == 'verbal' and self.webhook['id'] and self.webhook['token']:

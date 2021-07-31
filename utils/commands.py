@@ -10,7 +10,7 @@ from utils.general import texting
 def checkForPermission(self, user):
   check = False
   for role in user.roles:
-    if self.permission_role in str(role):
+    if self.administrator in str(role):
       check = True
       break
   return check

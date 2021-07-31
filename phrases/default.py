@@ -55,6 +55,22 @@ consentualBye = [
   "Was nice chatting with you."
 ]
 
+decisionReceived = [
+  "Alea iacta est.",
+  "Alright.",
+  "Check.",
+  "Gotcha.",
+  "Got it.",
+  "Hm-mm.",
+  "OK.",
+  "Okay.",
+  "Right.",
+  "U-huh.",
+  "Understood.",
+  "Ya.",
+  "You're the boss, boss."
+]
+
 initialPrompt = [
   "All set!",
   "Alright?",
@@ -86,6 +102,13 @@ initialPrompt = [
   "Yup."
 ]
 
+nevermindedThen = [
+  "Alright.",
+  "Another satisfied customer.",
+  "K, bye!",
+  "Neverminded then."
+]
+
 onesidedBye = [
   "I'll go stand over there for a bit.",
   "Just call me once you got there.",
@@ -113,22 +136,6 @@ permissionGranted = [
   "Proceeding.",
   "Pursuing the inquiry.",
   "Resuming."
-]
-
-decisionReceived = [
-  "Alea iacta est.",
-  "Alright.",
-  "Check.",
-  "Gotcha.",
-  "Got it.",
-  "Hm-mm.",
-  "OK.",
-  "Okay.",
-  "Right.",
-  "U-huh.",
-  "Understood.",
-  "Ya.",
-  "You're the boss, boss."
 ]
 
 processSuspended = [
@@ -161,6 +168,14 @@ requestPermission = [
   "Is that something that I am allowed to dig into?",
   "May I proceed with this?",
   "Requesting permission to do so."
+]
+
+subroutineUnreachable = [
+  "I can't locate that sub-routine at this moment."
+]
+
+unsureAboutQualifiedTopic = [
+  "I'm unsure about what to do with this."
 ]
 
 zerosidedBye = [

@@ -7,6 +7,7 @@ ai = [
 
 cancelInput = [
   "forget",
+  "ignore",
   "nevermind"
 ]
 
