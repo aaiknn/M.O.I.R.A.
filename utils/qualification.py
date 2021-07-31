@@ -1,17 +1,11 @@
 #!/usr/bin/env python3
 
-from aiohttp import ClientSession
 from asyncio import TimeoutError
-from discord import Embed
-from discord import AsyncWebhookAdapter
 from random import choice
 
 from intentions.qualification import ai, cancelInput, eonet, shenanigans, sysinfo
-import logs.status as status
 from phrases.default import onesidedBye
 from utils.general import texting
-from utils.webhooks import DiscordHooks
-
 
 async def waitForQualificationInput(self, ctx, user):
   def check(m):
@@ -49,24 +43,3 @@ async def qualifyInput(self, topic):
 
   else:
     raise NotImplementedError
-
-async def logStrongEmotionsToDiscord(id, token, name, username, duration):
-  s = ClientSession()
-  async with s:
-    message=status.discord_webhook_log_moira_not_listening.format(name, username, duration)
-    colourCode=0x7a2faf
-
-    embed = Embed(
-      color=colourCode,
-      title=status.discord_webhook_log_moira_not_listening_title,
-      description=message
-    )
-    log = DiscordHooks(
-      id,
-      token,
-      AsyncWebhookAdapter(s)
-    )
-    await log.hook.send(
-      embed=embed
-    )
-  await s.close()

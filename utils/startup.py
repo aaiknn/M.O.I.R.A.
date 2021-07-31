@@ -23,10 +23,10 @@ async def dbSelftest(self, scopedErrors):
     if not selftest:
       self.tism.setSystemState('DB', 'DOWN')
       scopedErrors.append(ugh.database_connection_error_unknown)
+    else:
+      self.tism.setSystemState('DB', 'UP')
 
-    self.tism.setSystemState('DB', 'UP')
-
-async def logTests(noColour, scopedErrors, scopedWarnings, webhookId, webhookToken):
+async def logTests(noColour, scopedErrors, scopedWarnings, webhook):
   boldred = getTermColour('boldred', noColour)
   boldyellow = getTermColour('boldyellow', noColour)
   colourend = getTermColour('colourend', noColour)
@@ -37,10 +37,10 @@ async def logTests(noColour, scopedErrors, scopedWarnings, webhookId, webhookTok
   for huh in scopedWarnings:
     print(f'\n{boldyellow}Warning:{colourend} {huh}')
 
-  if webhookId and webhookToken:
-    await logStartupToDiscord(webhookId, webhookToken, scopedErrors, scopedWarnings)
+  if webhook['id'] and webhook['token']:
+    await logStartupToDiscord(webhook, scopedErrors, scopedWarnings)
 
-async def logStartupToDiscord(id, token, scopedErrors, scopedWarnings):
+async def logStartupToDiscord(webhook, scopedErrors, scopedWarnings):
   s = ClientSession()
   async with s:
     t = timestamp()
@@ -64,8 +64,7 @@ async def logStartupToDiscord(id, token, scopedErrors, scopedWarnings):
       description=startUpMessage
     )
     log = DiscordHooks(
-      id,
-      token,
+      webhook,
       AsyncWebhookAdapter(s)
     )
     await log.hook.send(

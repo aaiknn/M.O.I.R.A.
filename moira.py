@@ -1,28 +1,30 @@
 #!/usr/bin/env python3
 
+from asyncio import sleep
 from os import environ as env
 from random import choice
 from discord import DMChannel, Intents, TextChannel
 from discord.ext import commands
 from dotenv import load_dotenv
-from time import sleep
 
 import logs.errors as ugh
 import logs.status as status
 import logs.warnings as warn
 from phrases.default import basicScriptFail, busyState, initialPrompt, misc, zerosidedBye
 
+from sessions.royub import Event, RoyUB
 from sessions.tism import TheInfamousStateMachine as TISM
 
 from utils.commands import waitForAuthorisedPrompt
 from utils.db import DBSetup
 from utils.general import texting
 from utils.prompts import handleResponse, parsePrompt
-from utils.qualification import logStrongEmotionsToDiscord as stormoff, qualifyInput, waitForQualificationInput
+from utils.qualification import qualifyInput, waitForQualificationInput
 from utils.startup import dbSelftest, logTests
 
 load_dotenv()
 
+# ENV
 noColour = env.get('NO_COLOR')
 
 moira_hooks_logs_id = str(env.get('MOIRA_WEBHOOKS_LOGS_ID'))
@@ -42,6 +44,10 @@ mongodb_db_general = env.get('MONGODB_DB_GENERAL')
 mongodb_collection_general = env.get('MONGODB_DB_GENERAL_COLLECTION')
 
 openai_api_token = str(env.get('OPENAI_API_TOKEN'))
+
+# GLOBALS
+globalErrors = []
+globalWarnings = []
 
 intents = Intents.default()
 intents.members = True
@@ -66,18 +72,29 @@ moira.patience = moira_patience
 moira.permission_role = moira_permission_role
 moira.mQ = []
 moira.tism = TISM()
-moira.token = openai_api_token
-
-moira.remove_command("help")
-
 moira.tism.setState(
   'subroutines', {
     'AI': 'DOWN',
     'DB': 'DOWN'
 })
+moira.token = openai_api_token
+moira.webhook = {
+  'id': moira_hooks_logs_id,
+  'token': moira_hooks_logs_token
+}
 
-globalErrors = []
-globalWarnings = []
+roy = RoyUB(
+  moira,
+  'verbal',
+  moira_hooks_open_logs_id,
+  moira_hooks_open_logs_token
+)
+
+# EVENTS
+moira.remove_command("help")
+
+roy.manageEvent('stormoff', roy.emitMemberTimeout)
+roy.manageEvent('memberTimeout', roy.memberTimeout)
 
 @moira.event
 async def on_ready():
@@ -85,7 +102,7 @@ async def on_ready():
 
   moira.tism.setState('angryAt', {'Larry': 'I just don\'t like Larry.'})
   moira.tism.setState('busy', False)
-  moira.tism.setState('busyWith', '')
+  moira.tism.setState('busyWith', None)
   moira.tism.setState('promptQueue', {})
 
   await dbSelftest(moira, globalErrors)
@@ -99,7 +116,12 @@ async def on_ready():
   if not openai_api_token:
     globalWarnings.append(warn.openai_token_not_set)
 
-  await logTests(noColour, globalErrors, globalWarnings, moira_hooks_logs_id, moira_hooks_logs_token)
+  await logTests(
+    noColour,
+    globalErrors,
+    globalWarnings,
+    moira.webhook
+  )
 
 @moira.event
 async def on_command_error(ctx, err):
@@ -121,17 +143,23 @@ async def on_message(message):
 
   await moira.process_commands(message)
 
-@moira.command(name=moira.nickname, pass_context=True)
+# COMMANDS
+@moira.command(
+  name=moira.nickname,
+  pass_context=True
+)
 async def initialPrompting(ctx):
   user = ctx.author
   m = ctx.message
   chn = ctx.channel.name
 
-  if user.id in moira.tism.state['angryAt'] and len(moira.tism.state['angryAt'][user.id]) > 0:
+  angryState = user.id in moira.tism.state['angryAt'] and len(moira.tism.state['angryAt'][user.id]) > 0
+  if angryState:
     return
 
   if moira.tism.state['busy'] == False:
     moira.tism.setState('busy', True)
+    moira.tism.setState('busyWith', user.id)
 
     if type(ctx.channel) == DMChannel:
       await texting(ctx)
@@ -140,36 +168,37 @@ async def initialPrompting(ctx):
     elif type(ctx.channel) == TextChannel:
       await texting(ctx)
       await ctx.send(choice(initialPrompt))
-
       topic = await waitForQualificationInput(moira, ctx, user)
 
       try:
         await qualifyInput(moira, topic.content)
+
       except InterruptedError:
         moira.tism.setState('busy', False)
+        moira.tism.setState('busyWith', None)
         return
+
       except ModuleNotFoundError:
         print('Oh no')
+
       except NotImplementedError:
         print('Oh no no')
+
       except TypeError:
-        # TODO: rework this.
+        reason = 'Not my type.'
+        duration = 4
         await texting(ctx, 2)
         await ctx.send(choice(zerosidedBye))
+        e = Event('stormoff')
+        await e.run(ctx, reason, duration)
+        return
 
-        reason = 'Not my type.'
-        moira.tism.queue('angryAt', user.id, reason)
+      except TimeoutError:
+        print('Prompt timeout.')
 
-        if moira_hooks_open_logs_id and moira_hooks_open_logs_token:
-          webhookId = moira_hooks_open_logs_id
-          webhookToken = moira_hooks_open_logs_token
-          await stormoff(webhookId, webhookToken, moira.nickname, user.name, 1)
-
-        sleep(60 * 1)
-
-        moira.tism.dequeue('angryAt', user.id, reason)
       except:
-        print('Oh no no no')
+        print('Oh no no no. (This message is really hardly ever printed. Have fun troubleshooting!)')
+
       else:
         matter = moira.tism.getState('busyWith')
         await ctx.send(matter)
@@ -188,6 +217,7 @@ async def initialPrompting(ctx):
         moira.mQ.remove(m.id)
 
       moira.tism.setState('busy', False)
+      moira.tism.setState('busyWith', None)
 
     else:
       await texting(ctx)

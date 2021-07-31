@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from time import sleep
+from asyncio import sleep
 
 termColours = {
   'boldred': '\x1b[1;31m',
