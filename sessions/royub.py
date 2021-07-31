@@ -48,17 +48,13 @@ class RoyUB(EventManager):
 
   async def memberTimeout(self, ctx, reason, duration):
     client = self.client
-    print(client)
-    print(client.tism.state)
     client.tism.setState('busy', False)
     client.tism.setState('busyWith', None)
-    print(client.tism.state)
 
     client.tism.queue('angryAt', ctx.author.id, reason)
     if self.mode == 'verbal' and self.webhook['id'] and self.webhook['token']:
       await self.logToDiscord('you', duration)
     print(log.client_now_angry.format(client.nickname, ctx.author.name, duration, reason))
-    print(client.tism.state)
 
     time = (60 * duration)
     await sleep(time)

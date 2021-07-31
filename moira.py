@@ -15,6 +15,8 @@ from phrases.default import basicScriptFail, busyState, initialPrompt, misc, zer
 from sessions.royub import Event, RoyUB
 from sessions.tism import TheInfamousStateMachine as TISM
 
+from settings import prefs
+
 from utils.commands import waitForAuthorisedPrompt
 from utils.db import DBSetup
 from utils.general import texting
@@ -100,7 +102,7 @@ roy.manageEvent('memberTimeout', roy.memberTimeout)
 async def on_ready():
   print(status.discord_moira_onready.format(moira))
 
-  moira.tism.setState('angryAt', {'Larry': 'I just don\'t like Larry.'})
+  moira.tism.setState('angryAt', {prefs.mPref_larry_name: prefs.mPref_larry_reason})
   moira.tism.setState('busy', False)
   moira.tism.setState('busyWith', None)
   moira.tism.setState('promptQueue', {})
@@ -138,8 +140,8 @@ async def on_message(message):
   
   if not message.content.startswith(moira_prefix):
     if moira.nickname in message.content:
-      sleep(2)
-      await message.add_reaction('\U0001f440')
+      await sleep(2)
+      await message.add_reaction(prefs.mPref_reaction_meta)
 
   await moira.process_commands(message)
 
@@ -185,7 +187,7 @@ async def initialPrompting(ctx):
         print('Oh no no')
 
       except TypeError:
-        reason = 'Not my type.'
+        reason = prefs.mPref_wrongType
         duration = 4
         await texting(ctx, 2)
         await ctx.send(choice(zerosidedBye))

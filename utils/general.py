@@ -17,4 +17,4 @@ def getTermColour(key, noColor = False):
 
 async def texting(ctx, duration=1):
   async with ctx.channel.typing():
-    sleep(duration)
+    await sleep(duration)
