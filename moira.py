@@ -193,9 +193,7 @@ async def initialPrompting(ctx):
         userRole = 'regular'
         break
 
-    if not roleCheck:
-      return
-  else:
+  if not roleCheck:
     return
 
   moira.tism.setBusyState(chid, user.id)
