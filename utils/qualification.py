@@ -7,9 +7,9 @@ from intentions.qualification import ai, cancelInput, eonet, shenanigans, sysinf
 from phrases.default import onesidedBye
 from utils.general import texting
 
-async def waitForQualificationInput(self, ctx, user):
+async def waitForQualificationInput(self, ctx):
   def check(m):
-    return m.author == user
+    return m.author == ctx.author
 
   try:
     topic = await self.wait_for('message', check=check, timeout=60.0)

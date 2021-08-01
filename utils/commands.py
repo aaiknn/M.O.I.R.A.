@@ -44,10 +44,10 @@ async def requestPermission(self, ctx):
     await ctx.send(f'{choice(decisionReceived)} {choice(permissionGranted)}')
     return perm
 
-async def waitForAuthorisedPrompt(self, ctx, user):
+async def waitForAuthorisedPrompt(self, ctx, sessionUser):
   await ctx.send('What\'s your prompt?')
   def check(m):
-    return m.author == user
+    return m.author == ctx.author
 
   for i in range(0, self.patience):
     try:

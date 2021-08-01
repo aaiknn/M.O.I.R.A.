@@ -14,6 +14,7 @@ from phrases.default import basicScriptFail, busyState as busyPhrase, initialPro
 
 from sessions.royub import Event, RoyUB
 from sessions.tism import TheInfamousStateMachine as TISM
+from sessions.users import SessionAdmin, SessionUser
 
 from settings import prefs
 
@@ -161,11 +162,11 @@ async def on_message(message):
   pass_context=True
 )
 async def initialPrompting(ctx):
-  user = ctx.author
   m = ctx.message
   chid = ctx.channel.id
+  sessionUser = None
 
-  angryState = user.id in moira.tism.state['angryAt'] and len(moira.tism.state['angryAt'][user.id]) > 0
+  angryState = ctx.author.id in moira.tism.state['angryAt'] and len(moira.tism.state['angryAt'][ctx.author.id]) > 0
   if angryState:
     return
 
@@ -176,28 +177,23 @@ async def initialPrompting(ctx):
     moira.mQ.append(m.id)
     return
 
-  roleCheck = False
-  userRole = None
-
   if moira.administrator:
-    for entry in user.roles:
+    for entry in ctx.author.roles:
       if str(moira.administrator) in str(entry.name):
-        roleCheck = True
-        userRole = 'admin'
+        sessionUser = SessionAdmin(ctx.author.id)
         break
 
-  if moira.regularUser and not userRole:
-    for entry in user.roles:
+  if not sessionUser and moira.regularUser:
+    for entry in ctx.author.roles:
       if str(moira.regularUser) in str(entry.name):
-        roleCheck = True
-        userRole = 'regular'
+        sessionUser = SessionUser(ctx.author.id)
         break
 
-  if not roleCheck:
+  if not sessionUser:
     return
 
-  moira.tism.setBusyState(chid, user.id)
-  moira.tism.setSessionState(chid, userRole, user.id)
+  moira.tism.setBusyState(chid, sessionUser.id)
+  moira.tism.setSessionState(chid, sessionUser.role, sessionUser.id)
 
   if type(ctx.channel) == DMChannel:
     await texting(ctx)
@@ -206,7 +202,7 @@ async def initialPrompting(ctx):
   elif type(ctx.channel) == TextChannel:
     await texting(ctx)
     await ctx.send(choice(initialPrompt))
-    topic = await waitForQualificationInput(moira, ctx, user)
+    topic = await waitForQualificationInput(moira, ctx)
 
     try:
       await qualifyInput(moira, chid, topic.content)
@@ -254,7 +250,7 @@ async def initialPrompting(ctx):
     subroutine = sessionState['active_subroutine']
 
     if subroutine == 'AI':
-      prompt = await waitForAuthorisedPrompt(moira, ctx, user)
+      prompt = await waitForAuthorisedPrompt(moira, ctx, sessionUser)
       if prompt:
         response = await parsePrompt(moira, ctx, prompt.content)
         if response:
