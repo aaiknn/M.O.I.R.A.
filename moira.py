@@ -250,14 +250,20 @@ async def initialPrompting(ctx):
       moira.tism.setSessionState(chid, None)
       return
 
-    prompt = await waitForAuthorisedPrompt(moira, ctx, user)
-    if prompt:
-      response = await parsePrompt(moira, ctx, prompt.content)
-      if response:
-        await handleResponse(ctx, response)
-      else:
-        await texting(ctx)
-        await ctx.send(misc['failsafe'])
+    sessionState = moira.tism.getSessionState(chid)
+    subroutine = sessionState['active_subroutine']
+
+    if subroutine == 'AI':
+      prompt = await waitForAuthorisedPrompt(moira, ctx, user)
+      if prompt:
+        response = await parsePrompt(moira, ctx, prompt.content)
+        if response:
+          async with ctx.channel.typing():
+            await handleResponse(ctx, response)
+        else:
+          await texting(ctx)
+          await ctx.send(misc['failsafe'])
+      moira.tism.removeFromSessionState(chid, 'active_subroutine')
 
     if m.id in moira.mQ:
       moira.tism.dequeue('promptQueue', chid, m)

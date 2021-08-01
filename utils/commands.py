@@ -45,6 +45,7 @@ async def requestPermission(self, ctx):
     return perm
 
 async def waitForAuthorisedPrompt(self, ctx, user):
+  await ctx.send('What\'s your prompt?')
   def check(m):
     return m.author == user
 

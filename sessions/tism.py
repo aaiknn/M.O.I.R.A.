@@ -49,6 +49,9 @@ class TheInfamousStateMachine:
     else:
       state.update({key: val})
 
+  def removeFromSessionState(self, channelKey, key):
+    return self.state['busyWith'][channelKey].pop(key)
+
   def updateSessionState(self, channelKey, key, val):
     state = self.state['busyWith'][channelKey]
     if key in state:
