@@ -8,5 +8,5 @@ class SessionUser:
 
 class SessionAdmin(SessionUser):
   def __init__(self, *args):
-    self.role = 'admin'
     SessionUser.__init__(self, *args)
+    self.role = 'admin'

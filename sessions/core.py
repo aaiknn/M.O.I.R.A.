@@ -3,6 +3,8 @@
 from discord import Intents
 from discord.ext.commands import Bot
 
+from utils.general import texting
+
 intents = Intents.default()
 intents.members = True
 
@@ -19,3 +21,7 @@ class MOIRA(Bot):
     self.regularUser = regularUser
     self.patience = patience
     self.subroutines = options.get('subroutines')
+
+  async def send(self, ctx, m, duration=1):
+    await texting(ctx, duration)
+    await ctx.send(m)

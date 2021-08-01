@@ -21,7 +21,6 @@ from settings import prefs
 from utils.administration import mindThoseArgs
 from utils.commands import waitForAuthorisedPrompt
 from utils.db import DBSetup
-from utils.general import texting
 from utils.prompts import handleResponse, parsePrompt
 from utils.qualification import qualifyInput, waitForQualificationInput
 from utils.startup import dbSelftest, logTests
@@ -198,38 +197,33 @@ async def initialPrompting(ctx):
   moira.tism.setSessionState(chid, sessionUser.role, sessionUser.id)
 
   if type(ctx.channel) == DMChannel:
-    await texting(ctx)
-    await ctx.send(misc['notInDMs'])
+    await moira.send(ctx, misc['notInDMs'])
 
   elif type(ctx.channel) == TextChannel:
-    await texting(ctx)
-    await ctx.send(choice(initialPrompt))
+    await moira.send(ctx, choice(initialPrompt))
     topic = await waitForQualificationInput(moira, ctx)
 
     try:
       await qualifyInput(moira, chid, topic.content)
 
     except InterruptedError:
-      await texting(ctx)
-      await ctx.send(choice(nevermindedThen))
+      await moira.send(ctx, choice(nevermindedThen))
       moira.tism.setBusyState(chid, 'FALSE')
       moira.tism.setSessionState(chid, None)
       return
 
     except ModuleNotFoundError:
-      await texting(ctx)
       if sessionUser.role == 'admin':
-        await ctx.send(choice(currentlyNot))
+        await moira.send(ctx, choice(currentlyNot))
       else:
-        await ctx.send(choice(unsure))
+        await moira.send(ctx, choice(unsure))
 
       moira.tism.setBusyState(chid, 'FALSE')
       moira.tism.setSessionState(chid, None)
       return
 
     except NotImplementedError:
-      await texting(ctx)
-      await ctx.send(choice(unsure))
+      await moira.send(ctx, choice(unsure))
       moira.tism.setBusyState(chid, 'FALSE')
       moira.tism.setSessionState(chid, None)
       return
@@ -238,13 +232,11 @@ async def initialPrompting(ctx):
       if sessionUser.role == 'regular':
         reason = prefs.mPref_wrongType
         duration = 4
-        await texting(ctx, 2)
-        await ctx.send(choice(zerosidedBye))
+        await moira.send(ctx, choice(zerosidedBye), 2)
         e = Event('stormoff')
         await e.run(ctx, reason, duration)
       else:
-        await texting(ctx)
-        await ctx.send(choice(ha))
+        await moira.send(ctx, choice(ha))
         moira.tism.setBusyState(chid, 'FALSE')
         moira.tism.setSessionState(chid, None)
       return
@@ -272,8 +264,7 @@ async def initialPrompting(ctx):
           async with ctx.channel.typing():
             await handleResponse(ctx, response)
         else:
-          await texting(ctx)
-          await ctx.send(misc['failsafe'])
+          await moira.send(ctx, misc['failsafe'])
       moira.tism.removeFromSessionState(chid, 'active_subroutine')
 
     if m.id in moira.mQ:
@@ -284,7 +275,6 @@ async def initialPrompting(ctx):
     moira.tism.setSessionState(chid, None)
 
   else:
-    await texting(ctx)
-    await ctx.send(misc['notInOther'])
+    await moira.send(ctx, misc['notInOther'])
 
 moira.run(str(env.get('DISCORD_API_TOKEN')))
