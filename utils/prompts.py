@@ -12,7 +12,7 @@ async def handleResponse(ctx, response):
 async def parsePrompt(self, ctx, prompt):
   await ctx.send(choice(beforeResearch))
 
-  openai.api_key = self.token
+  openai.api_key = self.subroutines['AI']
 
   ## defaults
   max_tokens=50

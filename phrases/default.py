@@ -71,6 +71,10 @@ decisionReceived = [
   "You're the boss, boss."
 ]
 
+ha = [
+  "Ha. Funny."
+]
+
 initialPrompt = [
   "All set!",
   "Alright?",
