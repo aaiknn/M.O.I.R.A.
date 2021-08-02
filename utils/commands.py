@@ -4,27 +4,35 @@ from asyncio import TimeoutError
 from random import choice
 
 from intentions.commands import confirm, reject
-from phrases.default import decisionReceived, onesidedBye, permissionDenied, permissionGranted, promptTimeout, requestPermission as reqPerm, requestTimeout
-from utils.general import texting
+from phrases.default import decisionReceived, onesidedBye, permissionDenied, permissionGranted, promptPlease, promptTimeout, requestPermission as reqPerm, requestTimeout
+from sessions.users import SessionAdmin, SessionUser
 
-def checkForPermission(self, user):
+def checkForHighPermissions(self, userObj):
   check = False
-  for role in user.roles:
-    if self.administrator in str(role):
-      check = True
-      break
+
+  if isinstance(userObj, SessionAdmin):
+    return True
+  elif isinstance(userObj, SessionUser):
+    return False
+  else:
+    for role in userObj.roles:
+      if self.administrator in str(role):
+        check = True
+        break
+
   return check
 
 async def requestPermission(self, ctx):
-  await texting(ctx)
-  await ctx.send(choice(reqPerm))
+  await self.send(ctx, choice(reqPerm))
 
   def check(m):
-    check = checkForPermission(self, m.author)
+    decision = str.lower(m.content)
+    check = checkForHighPermissions(self, m.author)
 
-    if check and any(word in m.content for word in confirm):
+    if check and any(word in decision for word in confirm):
+      print(decision)
       return True
-    elif any(word in m.content for word in reject):
+    elif any(word in decision for word in reject):
       raise PermissionError
     else:
       return False
@@ -32,20 +40,19 @@ async def requestPermission(self, ctx):
   try:
     perm = await self.wait_for('message', check=check, timeout=60.0)
   except TimeoutError:
-    await texting(ctx)
-    await ctx.send(choice(requestTimeout))
+    await self.send(ctx, choice(requestTimeout))
     return False
   except PermissionError:
-    await texting(ctx)
-    await ctx.send(f'{choice(decisionReceived)} {choice(permissionDenied)}')
+    await self.send(ctx, f'{choice(decisionReceived)} {choice(permissionDenied)}')
     return False
+  except Exception as e:
+    raise e
   else:
-    await texting(ctx)
-    await ctx.send(f'{choice(decisionReceived)} {choice(permissionGranted)}')
+    await self.send(ctx, f'{choice(decisionReceived)} {choice(permissionGranted)}')
     return perm
 
 async def waitForAuthorisedPrompt(self, ctx, sessionUser):
-  await ctx.send('What\'s your prompt?')
+  await self.send(ctx, choice(promptPlease))
   def check(m):
     return m.author == ctx.author
 
@@ -54,15 +61,15 @@ async def waitForAuthorisedPrompt(self, ctx, sessionUser):
       prompt = await self.wait_for('message', check=check, timeout=60.0)
     except TimeoutError:
       if i == (self.patience - 1):
-        await texting(ctx, 2)
-        await ctx.send(choice(onesidedBye))
+        await self.send(ctx, choice(onesidedBye), 2)
         break
       else:
-        await texting(ctx)
-        await ctx.send(choice(promptTimeout))
+        await self.send(ctx, choice(promptTimeout))
         continue
+    except Exception as e:
+      raise e
     else:
-      perm = checkForPermission(self, ctx.author)
+      perm = checkForHighPermissions(self, sessionUser)
       if perm:
         return prompt
       else:

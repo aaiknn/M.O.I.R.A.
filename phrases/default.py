@@ -42,8 +42,10 @@ beforeResearch = [
 ]
 
 busyState = [
+  "Currently working on something already.",
   "Hold on, I'm in the middle of something.",
-  "I'm busy with that other thing."
+  "I'm busy with that other thing.",
+  "Sorry, already working on another thing."
 ]
 
 consentualBye = [
@@ -72,7 +74,8 @@ decisionReceived = [
 ]
 
 ha = [
-  "Ha. Funny."
+  "Ha. Funny.",
+  "Heh."
 ]
 
 initialPrompt = [
@@ -110,7 +113,8 @@ nevermindedThen = [
   "Alright.",
   "Another satisfied customer.",
   "K, bye!",
-  "Neverminded then."
+  "Neverminded then.",
+  "Right. Next time, then. Right?"
 ]
 
 onesidedBye = [
@@ -149,6 +153,12 @@ processSuspended = [
   "Process suspended."
 ]
 
+promptPlease = [
+  "Hand me a prompt.",
+  "Prompt, please.",
+  "What's your prompt?"
+]
+
 promptTimeout = [
   "Bump.",
   "Have you made up your mind on what you wanted yet?",
@@ -174,14 +184,27 @@ requestPermission = [
   "Requesting permission to do so."
 ]
 
+statementReceived = [
+  "Alright.",
+  "Got it.",
+  "OK.",
+  "Okay.",
+  "Understood."
+]
+
 subroutineUnreachable = [
-  "I can't locate that sub-routine at this moment."
+  "I can't locate that sub-routine at this moment.",
+  "That specific sub-routine isn't currently up."
 ]
 
 unsureAboutQualifiedTopic = [
-  "I'm unsure about what to do with this."
+  "Can't decide where to go with this.",
+  "I'm unsure about what to do with this.",
+  "Not sure where to take this."
 ]
 
 zerosidedBye = [
-  "I'm not here for that."
+  "Don't ever go there, bud.",
+  "I'm not here for that.",
+  "Yeah, no."
 ]

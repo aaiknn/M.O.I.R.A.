@@ -27,6 +27,41 @@ class TheInfamousStateMachine:
     self.state['busy'] = {}
     return self.state['busy']
 
+  def addToPromptHistory(self, channelKey, key, prompt, response):
+    allHistory = self.state['promptHistory']
+    if channelKey in allHistory:
+      if key in allHistory[channelKey]:
+        self.state['promptHistory'][channelKey][key].append({prompt.id: response})
+      else:
+        self.state['promptHistory'][channelKey] = {key: [{prompt.id: response}]}
+    else:
+      self.state['promptHistory'] = {channelKey: {key: [{prompt.id: response}]}}
+
+    return self.state['promptHistory'][channelKey][key]
+
+  def getPromptHistory(self):
+    return self.state['promptHistory']
+
+  def getChannelPromptHistory(self, channelKey):
+    try:
+      state = self.state['promptHistory'][channelKey]
+    except:
+      return None
+    else:
+      return state
+
+  def getChannelPromptHistoryEntry(self, channelKey, key):
+    try:
+      state = self.state['promptHistory'][channelKey][key]
+    except:
+      return None
+    else:
+      return state
+
+  def resetPromptHistory(self):
+    self.state['promptHistory'] = {}
+    return self.state['promptHistory']
+
   def getSessionState(self, channelKey):
     try:
       state = self.state['busyWith'][channelKey]

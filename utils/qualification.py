@@ -5,7 +5,6 @@ from random import choice
 
 from intentions.qualification import ai, cancelInput, eonet, shenanigans, sysinfo
 from phrases.default import onesidedBye
-from utils.general import texting
 
 async def waitForQualificationInput(self, ctx):
   def check(m):
@@ -14,12 +13,13 @@ async def waitForQualificationInput(self, ctx):
   try:
     topic = await self.wait_for('message', check=check, timeout=60.0)
   except TimeoutError:
-      await texting(ctx, 2)
-      await ctx.send(choice(onesidedBye))
+    await self.send(ctx, choice(onesidedBye), 2)
   else:
     return topic
 
-async def qualifyInput(self, chid, topic):
+async def qualifyInput(self, chid, message):
+  topic = str.lower(message)
+
   if any(word in topic for word in sysinfo):
     return 'SYSINFO'
 

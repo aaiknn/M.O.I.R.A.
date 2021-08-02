@@ -6,9 +6,7 @@ from random import choice
 from discord import DMChannel, TextChannel
 from dotenv import load_dotenv
 
-import logs.errors as ugh
-import logs.status as status
-import logs.warnings as warn
+from logs import errors as ugh, status, warnings as warn
 from phrases.default import basicScriptFail, busyState as busyPhrase, ha, initialPrompt, misc, nevermindedThen, subroutineUnreachable as currentlyNot, unsureAboutQualifiedTopic as unsure, zerosidedBye
 
 from sessions.core import MOIRA
@@ -61,9 +59,13 @@ moira = MOIRA(
   moira_administrator_role,
   moira_user_role,
   moira_patience,
-  subroutines={
+  subroutines = {
     'AI': openai_api_token,
     'DB': ''
+  },
+  webhook = {
+    'id': moira_hooks_logs_id,
+    'token': moira_hooks_logs_token
   }
 )
 
@@ -75,6 +77,7 @@ moira.db = DBSetup(
   mongodb_db_general,
   mongodb_collection_general
 )
+
 moira.mQ = []
 moira.tism = TISM()
 moira.tism.setState(
@@ -82,11 +85,6 @@ moira.tism.setState(
     'AI': 'DOWN',
     'DB': 'DOWN'
 })
-
-moira.webhook = {
-  'id': moira_hooks_logs_id,
-  'token': moira_hooks_logs_token
-}
 
 roy = RoyUB(
   moira,
@@ -107,6 +105,7 @@ async def on_ready():
 
   moira.tism.setState('angryAt', {prefs.mPref_larry_name: prefs.mPref_larry_reason})
   moira.tism.resetBusyState()
+  moira.tism.resetPromptHistory()
   moira.tism.resetSessionState()
   moira.tism.setState('promptQueue', {})
 
@@ -147,7 +146,7 @@ async def on_message(message):
     return
   
   if not message.content.startswith(moira_prefix):
-    if moira.nickname in message.content:
+    if str.lower(moira.nickname) in str.lower(message.content):
       await sleep(2)
       await message.add_reaction(prefs.mPref_reaction_meta)
 
@@ -160,19 +159,20 @@ async def on_message(message):
 )
 async def initialPrompting(ctx):
   m = ctx.message
+  chad = ctx.author.id
   chid = ctx.channel.id
   sessionUser = None
 
   if moira.administrator:
     for entry in ctx.author.roles:
       if str(moira.administrator) in str(entry.name):
-        sessionUser = SessionAdmin(ctx.author.id)
+        sessionUser = SessionAdmin(chad)
         break
 
   if not sessionUser and moira.regularUser:
     for entry in ctx.author.roles:
       if str(moira.regularUser) in str(entry.name):
-        sessionUser = SessionUser(ctx.author.id)
+        sessionUser = SessionUser(chad)
         break
 
   if not sessionUser:
@@ -247,8 +247,9 @@ async def initialPrompting(ctx):
       moira.tism.setSessionState(chid, None)
       return
 
-    except:
+    except Exception as e:
       print('Oh no no no. (This message is really hardly ever printed. Have fun troubleshooting!)')
+      print(e)
       moira.tism.setBusyState(chid, 'FALSE')
       moira.tism.setSessionState(chid, None)
       return
@@ -257,22 +258,24 @@ async def initialPrompting(ctx):
     subroutine = sessionState['active_subroutine']
 
     if subroutine == 'AI':
+      response = ''
       prompt = await waitForAuthorisedPrompt(moira, ctx, sessionUser)
       if prompt:
         response = await parsePrompt(moira, ctx, prompt.content)
         if response:
-          async with ctx.channel.typing():
-            await handleResponse(ctx, response)
+          await handleResponse(moira, ctx, response)
         else:
           await moira.send(ctx, misc['failsafe'])
+        moira.tism.addToPromptHistory(chid, chad, prompt, response)
+
       moira.tism.removeFromSessionState(chid, 'active_subroutine')
+
+    moira.tism.setBusyState(chid, 'FALSE')
+    moira.tism.setSessionState(chid, None)
 
     if m.id in moira.mQ:
       moira.tism.dequeue('promptQueue', chid, m)
       moira.mQ.remove(m.id)
-
-    moira.tism.setBusyState(chid, False)
-    moira.tism.setSessionState(chid, None)
 
   else:
     await moira.send(ctx, misc['notInOther'])

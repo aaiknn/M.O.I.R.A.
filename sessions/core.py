@@ -21,6 +21,7 @@ class MOIRA(Bot):
     self.regularUser = regularUser
     self.patience = patience
     self.subroutines = options.get('subroutines')
+    self.webhook = options.get('webhook')
 
   async def send(self, ctx, m, duration=1):
     await texting(ctx, duration)
