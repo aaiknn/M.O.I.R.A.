@@ -1,10 +1,5 @@
 #!/usr/bin/env python3
 
-from random import choice
-
-from phrases.default import initialPrompt
-from utils.qualification import waitForQualificationInput
-
 class MoiraSession:
   def __init__(self, discordCtx, moiraInstance, sessionUser):
     self.ctx      = discordCtx
@@ -12,9 +7,12 @@ class MoiraSession:
     self.message  = ''
     self.user     = sessionUser
 
-  async def createSession(self, *args, **options):
-    await self.handler.send(self.ctx, choice(initialPrompt))
-    self.message = await waitForQualificationInput(self.handler, self.ctx)
+  async def createSession(self, chid, **options):
+    phrase = options.get('phrase')
+    if phrase:
+      await self.handler.send(self.ctx, phrase)
+    self.handler.tism.setBusyState(chid, self.user.id)
+    self.handler.tism.setSessionState(chid, self.user.role, self.user.id)
     return 'CREATIONSUCCESS'
 
   async def exitSession(self, chid, **options):

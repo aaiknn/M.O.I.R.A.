@@ -8,7 +8,8 @@ from discord import DMChannel, TextChannel
 from dotenv import load_dotenv
 
 from logs import errors as ugh, status, warnings as warn
-from phrases.default import basicScriptFail, busyState as busyPhrase, ha, misc, nevermindedThen, subroutineUnreachable as currentlyNot, unsureAboutQualifiedTopic as unsure, zerosidedBye
+from phrases.default import basicScriptFail, busyState as busyPhrase, ha, initialPrompt, misc, nevermindedThen
+from phrases.default import subroutineUnreachable as currentlyNot, unsureAboutQualifiedTopic as unsure, zerosidedBye
 
 from sessions.core import MOIRA
 from sessions.royub import Event, RoyUB
@@ -21,7 +22,7 @@ from settings import prefs
 from utils.administration import mindThoseArgs
 from utils.db import DBSetup
 from utils.prompts import handleResponse, parsePrompt, waitForAuthorisedPrompt
-from utils.qualification import qualifyInput
+from utils.qualification import qualifyInput, waitForQualificationInput
 from utils.startup import dbSelftest, logTests
 
 load_dotenv()
@@ -89,7 +90,7 @@ moira.tism = MISM(
 
 moira.tism.setState(
   moira.tism.systemsKey, {
-    'AI': 'UP',
+    'AI': 'DOWN',
     'DB': 'DOWN'
 })
 
@@ -200,15 +201,13 @@ async def initialPrompting(ctx):
     moira.mQ.append(m.id)
     return
 
-  moira.tism.setBusyState(chid, sessionUser.id)
-  moira.tism.setSessionState(chid, sessionUser.role, sessionUser.id)
-
   if type(ctx.channel) == DMChannel:
     await moira.send(ctx, misc['notInDMs'])
 
   elif type(ctx.channel) == TextChannel:
     session = MoiraSession(ctx, moira, sessionUser)
-    await session.createSession()
+    await session.createSession(chid, phrase=choice(initialPrompt))
+    session.message = await waitForQualificationInput(session.handler, session.ctx)
 
     try:
       await qualifyInput(moira, chid, session.message)
