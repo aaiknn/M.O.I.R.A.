@@ -3,15 +3,17 @@
 from asyncio import sleep
 from os import environ as env
 from random import choice
+from sessions.session import MoiraSession
 from discord import DMChannel, TextChannel
 from dotenv import load_dotenv
 
 from logs import errors as ugh, status, warnings as warn
-from phrases.default import basicScriptFail, busyState as busyPhrase, ha, initialPrompt, misc, nevermindedThen, subroutineUnreachable as currentlyNot, unsureAboutQualifiedTopic as unsure, zerosidedBye
+from phrases.default import basicScriptFail, busyState as busyPhrase, ha, misc, nevermindedThen, subroutineUnreachable as currentlyNot, unsureAboutQualifiedTopic as unsure, zerosidedBye
 
 from sessions.core import MOIRA
 from sessions.royub import Event, RoyUB
-from sessions.tism import TheInfamousStateMachine as TISM
+from sessions.tism import MoiraInfamousStateMachine as MISM
+from sessions.session import MoiraSession
 from sessions.users import SessionAdmin, SessionUser
 
 from settings import prefs
@@ -19,7 +21,7 @@ from settings import prefs
 from utils.administration import mindThoseArgs
 from utils.db import DBSetup
 from utils.prompts import handleResponse, parsePrompt, waitForAuthorisedPrompt
-from utils.qualification import qualifyInput, waitForQualificationInput
+from utils.qualification import qualifyInput
 from utils.startup import dbSelftest, logTests
 
 load_dotenv()
@@ -78,10 +80,16 @@ moira.db = DBSetup(
 )
 
 moira.mQ = []
-moira.tism = TISM()
+moira.tism = MISM(
+  busyKey           = 'busy',
+  promptHistoryKey  = 'promptHistory',
+  sessionKey        = 'busyWith',
+  systemsKey        = 'subroutines'
+)
+
 moira.tism.setState(
-  'subroutines', {
-    'AI': 'DOWN',
+  moira.tism.systemsKey, {
+    'AI': 'UP',
     'DB': 'DOWN'
 })
 
@@ -199,32 +207,25 @@ async def initialPrompting(ctx):
     await moira.send(ctx, misc['notInDMs'])
 
   elif type(ctx.channel) == TextChannel:
-    await moira.send(ctx, choice(initialPrompt))
-    topic = await waitForQualificationInput(moira, ctx)
+    session = MoiraSession(ctx, moira, sessionUser)
+    await session.createSession()
 
     try:
-      await qualifyInput(moira, chid, topic.content)
+      await qualifyInput(moira, chid, session.message)
 
     except InterruptedError:
-      await moira.send(ctx, choice(nevermindedThen))
-      moira.tism.setBusyState(chid, 'FALSE')
-      moira.tism.setSessionState(chid, None)
+      await session.exitSession(chid, response=choice(nevermindedThen))
       return
 
     except ModuleNotFoundError:
       if sessionUser.role == 'admin':
-        await moira.send(ctx, choice(currentlyNot))
+        await session.exitSession(chid, response=choice(currentlyNot))
       else:
-        await moira.send(ctx, choice(unsure))
-
-      moira.tism.setBusyState(chid, 'FALSE')
-      moira.tism.setSessionState(chid, None)
+        await session.exitSession(chid, response=choice(unsure))
       return
 
     except NotImplementedError:
-      await moira.send(ctx, choice(unsure))
-      moira.tism.setBusyState(chid, 'FALSE')
-      moira.tism.setSessionState(chid, None)
+      await session.exitSession(chid, response=choice(unsure))
       return
 
     except TypeError:
@@ -235,25 +236,21 @@ async def initialPrompting(ctx):
         e = Event('stormoff')
         await e.run(ctx, reason, duration)
       else:
-        await moira.send(ctx, choice(ha))
-        moira.tism.setBusyState(chid, 'FALSE')
-        moira.tism.setSessionState(chid, None)
+        await session.exitSession(chid, response=choice(ha))
       return
 
     except TimeoutError:
       print('Prompt timeout.')
-      moira.tism.setBusyState(chid, 'FALSE')
-      moira.tism.setSessionState(chid, None)
+      await session.exitSession(chid)
       return
 
     except Exception as e:
       print('Oh no no no. (This message is really hardly ever printed. Have fun troubleshooting!)')
       print(e)
-      moira.tism.setBusyState(chid, 'FALSE')
-      moira.tism.setSessionState(chid, None)
+      await session.exitSession(chid)
       return
 
-    sessionState = moira.tism.getSessionState(chid)
+    sessionState = session.getState(chid)
     subroutine = sessionState['active_subroutine']
 
     if subroutine == 'AI':

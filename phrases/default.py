@@ -184,6 +184,16 @@ requestPermission = [
   "Requesting permission to do so."
 ]
 
+stateResetHard = [
+  "All state has been cleared.",
+  "Wiped the whole thing."
+]
+
+stateResetSoft = [
+  "Current session is nulled.",
+  "Oh, okay. Yeah. Minor obstacle removed."
+]
+
 statementReceived = [
   "Alright.",
   "Got it.",
@@ -195,6 +205,12 @@ statementReceived = [
 subroutineUnreachable = [
   "I can't locate that sub-routine at this moment.",
   "That specific sub-routine isn't currently up."
+]
+
+taskDone = [
+  "Did it.",
+  "Done.",
+  "Done. Did it."
 ]
 
 unsureAboutQualifiedTopic = [

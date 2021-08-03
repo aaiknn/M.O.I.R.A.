@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from random import choice
-from phrases.default import statementReceived
+from phrases.default import stateResetHard, stateResetSoft
 
 async def mindThoseArgs(self, ctx, sessionUser, m):
   c = m.content
@@ -13,9 +13,9 @@ async def mindThoseArgs(self, ctx, sessionUser, m):
         if 'hard' in c:
           self.tism.resetBusyState()
           self.tism.resetSessionState()
-          self.send(ctx, choice(statementReceived))
+          await self.send(ctx, choice(stateResetHard))
           return 'DONE'
         elif 'soft' in c:
           self.tism.setBusyState(chid, 'FALSE')
           self.tism.setSessionState(chid, None)
-          self.send(ctx, choice(statementReceived))
+          await self.send(ctx, choice(stateResetSoft))
