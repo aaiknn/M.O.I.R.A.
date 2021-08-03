@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 
-async def mindThoseArgs(moira, ctx, sessionUser, m):
+from random import choice
+from phrases.default import statementReceived
+
+async def mindThoseArgs(self, ctx, sessionUser, m):
   c = m.content
   chid = ctx.channel.id
 
@@ -8,9 +11,11 @@ async def mindThoseArgs(moira, ctx, sessionUser, m):
     if 'reset' in c:
       if 'session' in c:
         if 'hard' in c:
-          moira.tism.resetBusyState()
-          moira.tism.resetSessionState()
+          self.tism.resetBusyState()
+          self.tism.resetSessionState()
+          self.send(ctx, choice(statementReceived))
           return 'DONE'
         elif 'soft' in c:
-          moira.tism.setBusyState(chid, 'FALSE')
-          moira.tism.setSessionState(chid, None)
+          self.tism.setBusyState(chid, 'FALSE')
+          self.tism.setSessionState(chid, None)
+          self.send(ctx, choice(statementReceived))
