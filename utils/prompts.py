@@ -4,7 +4,8 @@ import openai
 from random import choice
 
 from data.airesponse import OpenAIResponse
-from phrases.default import beforeResearch
+from phrases.default import beforeResearch, promptPlease, promptTimeout, onesidedBye
+from utils.commands import checkForHighPermissions, requestPermission
 
 async def handleResponse(self, ctx, response):
   _obj = OpenAIResponse(response)
@@ -40,3 +41,31 @@ async def parsePrompt(self, ctx, prompt):
     return False
   else:
     return response
+
+async def waitForAuthorisedPrompt(self, ctx, sessionUser):
+  await self.send(ctx, choice(promptPlease))
+  def check(m):
+    return m.author == ctx.author
+
+  for i in range(0, self.patience):
+    try:
+      prompt = await self.wait_for('message', check=check, timeout=60.0)
+    except TimeoutError:
+      if i == (self.patience - 1):
+        await self.send(ctx, choice(onesidedBye), 2)
+        break
+      else:
+        await self.send(ctx, choice(promptTimeout))
+        continue
+    except Exception as e:
+      raise e
+    else:
+      perm = checkForHighPermissions(self, sessionUser)
+      if perm:
+        return prompt
+      else:
+        req = await requestPermission(self, ctx)
+        if req:
+          return prompt
+
+      break

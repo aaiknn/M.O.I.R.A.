@@ -17,9 +17,8 @@ from sessions.users import SessionAdmin, SessionUser
 from settings import prefs
 
 from utils.administration import mindThoseArgs
-from utils.commands import waitForAuthorisedPrompt
 from utils.db import DBSetup
-from utils.prompts import handleResponse, parsePrompt
+from utils.prompts import handleResponse, parsePrompt, waitForAuthorisedPrompt
 from utils.qualification import qualifyInput, waitForQualificationInput
 from utils.startup import dbSelftest, logTests
 
@@ -267,7 +266,6 @@ async def initialPrompting(ctx):
         else:
           await moira.send(ctx, misc['failsafe'])
         moira.tism.addToPromptHistory(chid, chad, prompt, response)
-
       moira.tism.removeFromSessionState(chid, 'active_subroutine')
 
     moira.tism.setBusyState(chid, 'FALSE')
