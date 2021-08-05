@@ -5,29 +5,29 @@ class TheInfamousStateMachine:
     self.state = {}
 
   def getState(self, key):
-    return self.state[key]
+    return self.state[str(key)]
 
   def setState(self, key, val):
-    self.state.update({key: val})
-    return self.state[key]
+    self.state.update({str(key): val})
+    return self.state[str(key)]
 
   def queue(self, queueKey, key, val):
-    l = self.state[queueKey].get(key)
+    l = self.state[str(queueKey)].get(str(key))
     if not l:
       l = [val]
     else:
       l.append(val)
-    self.state[queueKey].update({key: l})
-    return self.state[queueKey][key]
+    self.state[str(queueKey)].update({str(key): l})
+    return self.state[str(queueKey)][str(key)]
 
   def dequeue(self, queueKey, key, val):
-    l = self.state[queueKey].get(key)
+    l = self.state[str(queueKey)].get(str(key))
     if not l:
       return
     else:
       l.remove(val)
-    self.state[queueKey].update({key: l})
-    return self.state[queueKey][key]
+    self.state[str(queueKey)].update({str(key): l})
+    return self.state[str(queueKey)][str(key)]
 
 class MoiraInfamousStateMachine(TheInfamousStateMachine):
   def __init__(self, **options):
@@ -40,15 +40,15 @@ class MoiraInfamousStateMachine(TheInfamousStateMachine):
 
   def getBusyState(self, channelKey):
     try:
-      state = self.state[self.busyKey][channelKey]
+      state = self.state[self.busyKey][str(channelKey)]
     except:
       return 'FALSE'
     else:
       return state
 
   def setBusyState(self, channelKey, userId):
-    self.state[self.busyKey][channelKey] = userId
-    return self.state[self.busyKey][channelKey]
+    self.state[self.busyKey][str(channelKey)] = str(userId)
+    return self.state[self.busyKey][str(channelKey)]
 
   def resetBusyState(self):
     self.state[self.busyKey] = {}
@@ -56,22 +56,22 @@ class MoiraInfamousStateMachine(TheInfamousStateMachine):
 
   def addToPromptHistory(self, channelKey, key, prompt, response):
     allHistory = self.state[self.promptHistoryKey]
-    if channelKey in allHistory:
-      if key in allHistory[channelKey]:
-        self.state[self.promptHistoryKey][channelKey][key].append({prompt.id: response})
+    if str(channelKey) in allHistory:
+      if str(key) in allHistory[str(channelKey)]:
+        self.state[self.promptHistoryKey][str(channelKey)][str(key)].append({str(prompt.id): response})
       else:
-        self.state[self.promptHistoryKey][channelKey] = {key: [{prompt.id: response}]}
+        self.state[self.promptHistoryKey][str(channelKey)] = {str(key): [{str(prompt.id): response}]}
     else:
-      self.state[self.promptHistoryKey] = {channelKey: {key: [{prompt.id: response}]}}
+      self.state[self.promptHistoryKey] = {str(channelKey): {str(key): [{str(prompt.id): response}]}}
 
-    return self.state[self.promptHistoryKey][channelKey][key]
+    return self.state[self.promptHistoryKey][str(channelKey)][str(key)]
 
   def getPromptHistory(self):
     return self.state[self.promptHistoryKey]
 
   def getChannelPromptHistory(self, channelKey):
     try:
-      state = self.state[self.promptHistoryKey][channelKey]
+      state = self.state[self.promptHistoryKey][str(channelKey)]
     except:
       return None
     else:
@@ -79,7 +79,7 @@ class MoiraInfamousStateMachine(TheInfamousStateMachine):
 
   def getChannelPromptHistoryEntry(self, channelKey, key):
     try:
-      state = self.state[self.promptHistoryKey][channelKey][key]
+      state = self.state[self.promptHistoryKey][str(channelKey)][str(key)]
     except:
       return None
     else:
@@ -91,7 +91,7 @@ class MoiraInfamousStateMachine(TheInfamousStateMachine):
 
   def getSessionState(self, channelKey):
     try:
-      state = self.state[self.sessionKey][channelKey]
+      state = self.state[self.sessionKey][str(channelKey)]
     except:
       return None
     else:
@@ -99,25 +99,26 @@ class MoiraInfamousStateMachine(TheInfamousStateMachine):
 
   def setSessionState(self, channelKey, userRole, userId = None):
     if not userRole:
-      self.state[self.sessionKey][channelKey] = None
+      self.state[self.sessionKey][str(channelKey)] = None
     else:
-      self.state[self.sessionKey][channelKey] = {userRole: userId}
-    return self.state[self.sessionKey][channelKey]
+      self.state[self.sessionKey][str(channelKey)] = {userRole: str(userId)}
+    return self.state[self.sessionKey][str(channelKey)]
 
   def addToSessionState(self, channelKey, key, val):
-    state = self.state[self.sessionKey][channelKey]
-    if key in state:
+    state = self.state[self.sessionKey][str(channelKey)]
+    if str(key) in state:
       raise LookupError
     else:
-      state.update({key: val})
+      state.update({str(key): val})
 
   def removeFromSessionState(self, channelKey, key):
-    return self.state[self.sessionKey][channelKey].pop(key)
+    keyStr = str(key)
+    return self.state[self.sessionKey][str(channelKey)].pop(keyStr)
 
   def updateSessionState(self, channelKey, key, val):
-    state = self.state[self.sessionKey][channelKey]
-    if key in state:
-      state.update({key: val})
+    state = self.state[self.sessionKey][str(channelKey)]
+    if str(key) in state:
+      state.update({str(key): val})
     else:
       raise KeyError
 
@@ -127,12 +128,12 @@ class MoiraInfamousStateMachine(TheInfamousStateMachine):
 
   def getSystemState(self, key):
     try:
-      state = self.state['subroutines'][key]
+      state = self.state['subroutines'][str(key)]
     except:
       return None
     else:
       return state
 
   def setSystemState(self, key, val):
-    self.state['subroutines'][key] = val
-    return self.state['subroutines'][key]
+    self.state['subroutines'][str(key)] = val
+    return self.state['subroutines'][str(key)]

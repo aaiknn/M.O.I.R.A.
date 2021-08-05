@@ -48,6 +48,10 @@ busyState = [
   "Sorry, already working on another thing."
 ]
 
+connectionSuccessful = [
+  "Connection successful."
+]
+
 consentualBye = [
   "Call me if there's anything else.",
   "Don't go stealing my thunder now! :D",
@@ -205,6 +209,14 @@ statementReceived = [
 subroutineUnreachable = [
   "I can't locate that sub-routine at this moment.",
   "That specific sub-routine isn't currently up."
+]
+
+sysOpComplete = [
+  "Operation complete."
+]
+
+sysOpCompleteWithSideEffects = [
+  "Operation complete with errors and slash or warnings."
 ]
 
 taskDone = [
