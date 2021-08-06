@@ -77,6 +77,10 @@ decisionReceived = [
   "You're the boss, boss."
 ]
 
+emptyMessage = [
+  "Message is empty. There is nothing to send."
+]
+
 ha = [
   "Ha. Funny.",
   "Heh."

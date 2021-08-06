@@ -207,10 +207,11 @@ async def initialPrompting(ctx):
   elif type(ctx.channel) == TextChannel:
     session = MoiraSession(ctx, moira, sessionUser)
     await session.createSession(chid, phrase=choice(initialPrompt))
-    session.message = await waitForQualificationInput(session.handler, session.ctx)
+    message = await waitForQualificationInput(session.handler, session.ctx)
+    session.message = message.content
 
     try:
-      await qualifyInput(moira, chid, session.message)
+      await qualifyInput(moira, chid, message)
 
     except InterruptedError:
       await session.exitSession(chid, response=choice(nevermindedThen))

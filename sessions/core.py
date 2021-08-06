@@ -2,7 +2,9 @@
 
 from discord import Intents
 from discord.ext.commands import Bot
+from random import choice
 
+from phrases.default import emptyMessage
 from utils.general import texting
 
 intents = Intents.default()
@@ -34,6 +36,11 @@ class MOIRA(Bot):
       await sendMessage(ctx, duration, m, isDM)
 
 async def sendMessage(ctx, duration, m, isDM):
+  if len(m) == 0:
+    await texting(ctx)
+    await ctx.send(choice(emptyMessage))
+    return
+
   if isDM:
     await ctx.author.send(m)
   else:
