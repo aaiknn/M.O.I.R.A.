@@ -178,7 +178,7 @@ class MoiraInfamousStateMachine(TheInfamousStateMachine):
     keyStr = str(key)
 
     try:
-      state = self.state['subroutines'][keyStr]
+      state = self.state[self.systemsKey][keyStr]
     except:
       return None
     else:
@@ -187,5 +187,5 @@ class MoiraInfamousStateMachine(TheInfamousStateMachine):
   def setSystemState(self, key, val):
     keyStr = str(key)
 
-    self.state['subroutines'][keyStr] = val
-    return self.state['subroutines'][keyStr]
+    self.state[self.systemsKey][keyStr] = val
+    return self.state[self.systemsKey][keyStr]
