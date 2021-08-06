@@ -208,7 +208,11 @@ async def initialPrompting(ctx):
     session = MoiraSession(ctx, moira, sessionUser)
     await session.createSession(chid, phrase=choice(initialPrompt))
     message = await waitForQualificationInput(session.handler, session.ctx)
-    session.message = message.content
+    if message:
+      session.message = message.content
+    else:
+      await session.exitSession(chid)
+      return
 
     try:
       await qualifyInput(moira, chid, message)
