@@ -37,9 +37,7 @@ class MOIRA(Bot):
 
 async def sendMessage(ctx, duration, m, isDM):
   if len(m) == 0:
-    await texting(ctx)
-    await ctx.send(choice(emptyMessage))
-    return
+    m += choice(emptyMessage)
 
   if isDM:
     await ctx.author.send(m)

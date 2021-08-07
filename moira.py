@@ -140,13 +140,16 @@ async def on_ready():
     moira.webhook
   )
 
+  if moira.tism.getSystemState('DB') == 'UP':
+    await moira.db.retrieveMeta(moira)
+
 @moira.event
 async def on_command_error(ctx, err):
   await ctx.send(f"{choice(basicScriptFail)} `{err}`.")
 
 @moira.event
-async def on_error():
-  print(ugh.moira_discord_error_event)
+async def on_error(eventName):
+  print(f'{eventName}: {ugh.moira_discord_error_event}')
 
 @moira.event
 async def on_message(message):
