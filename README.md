@@ -54,7 +54,7 @@ If for some reason M.O.I.R.A. gets stuck in busy state during runtime, session a
 
 ## Maintenance and Data Backup
 ### Graceful Shutdown
-#### `*moira graceful shutdown | *moira prepare shutdown`
+#### `*moira graceful shutdown`
 If M.O.I.R.A. needs to be restarted, session administrators can send this message to save state in the database, so that all the data from state isn't lost and can be loaded into the context during the next start-up.
 
 (**Note**: M.O.I.R.A. needs a working database sub-routine for this to have any effect.)
