@@ -18,6 +18,24 @@ async def mindThoseArgs(self, ctx, sessionUser, m):
           self.db.errors = []
           return 'DONE'
 
+    if 'load' in c:
+      if 'state' in c:
+        if 'last' in c:
+          s = DBConnection(self.db)
+          try:
+            await s.restoreState(self.tism.state)
+          except Exception as e:
+            s.errors.append(f'DBConnection.restoreState(): {e}')
+          finally:
+            if len(s.errors) > 0:
+              for ugh in s.errors:
+                self.db.errors.append(ugh)
+              await self.send(ctx, choice(soClose))
+            else:
+              await self.send(ctx, choice(complete))
+
+            return 'DONE'
+
     elif 'reset' in c:
       if 'session' in c:
         if 'hard' in c:

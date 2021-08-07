@@ -64,25 +64,54 @@ class DBSetup:
 
 class DBConnection:
   def __init__(self, dbSetupObj):
+    self.client = ''
     self.setup  = dbSetupObj
     self.state  = dbSetupObj.state
     self.errors = []
 
-  async def storeState(self, stateObj, identifier):
-    meta        = self.state['meta']
-    currentHead = meta['HEAD']
-    currentTail = meta['TAIL']
-
-    client = MongoClient(self.setup.uri)
-
+  async def connect(self):
+    self.client = MongoClient(self.setup.uri)
     try:
-      db = client[self.setup.db_name]
+      db = self.client[self.setup.db_name]
       collection = db[self.setup.coll_name]
     except Exception as e:
       self.errors.append(f'Connecting to self.setup.coll_name: {e}')
       raise ConnectionAbortedError
+    else:
+      return collection
 
-    state = stateObj
+  async def disconnect(self):
+    try:
+      self.client.close
+    except Exception as e:
+      self.errors.append(f'Closing client session: {e}')
+      raise e
+
+  async def restoreState(self, tismStateObj, identifier='last'):
+    state       = tismStateObj
+    collection  = await self.connect()
+
+    try:
+      meta = collection.find_one({'meta': True})
+      document = collection.find_one({'_id': meta['TAIL']})
+    except Exception as e:
+      self.errors.append(f'Retrieving tail document: {e}')
+      raise e
+    finally:
+      await self.disconnect()
+
+    state['angryAt']        = document['angryAt']
+    state['promptHistory']  = document['promptHistory']
+    state['promptQueue']    = document['promptQueue']
+
+  async def storeState(self, tismStateObj, identifier):
+    meta        = self.state['meta']
+    currentHead = meta['HEAD']
+    currentTail = meta['TAIL']
+
+    collection = await self.connect()
+
+    state = tismStateObj
     state['identifier'] = str(identifier)
     state['tail']       = None
 
@@ -133,12 +162,7 @@ class DBConnection:
       'TAIL': newTail
     }
 
-    try:
-      client.close
-    except Exception as e:
-      self.errors.append(f'Closing client session: {e}')
-      raise e
-
+    await self.disconnect()
     return newMeta
 
 async def dbConnect(handler, ctx, **options):
