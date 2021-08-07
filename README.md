@@ -52,6 +52,15 @@ Session administrators will be able to grant Moira permission to proceed with re
 #### `*moira reset session soft | *moira reset session hard`
 If for some reason M.O.I.R.A. gets stuck in busy state during runtime, session administrators can try sending one of these messages. While a `soft` reset will clear the busy state for the channel where this message is sent, `hard` reset clears the entire object. Unless there is something horribly wrong with all sessions, `soft` reset is safe way to troubleshoot without having to restart.
 
+#### `*moira print system state`
+This will send a direct message to the administator session user who sent this request. The message will include caught database errors (if there have been any), database meta state information, and the current state of M.O.I.R.A.'s state machine (`MISM`).
+
+#### `*moira print db errors`
+This will send a direct message to the administrator session user who sent this request. The message will include the current queue of errors stored in `moira.db.errors`.
+
+#### `*moira print db state`
+This will send a direct message to the administrator session user who sent this request. The message will include the current database meta state information.
+
 ## Maintenance and Data Backup
 ### Graceful Shutdown
 #### `*moira graceful shutdown`
