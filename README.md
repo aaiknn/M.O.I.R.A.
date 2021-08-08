@@ -13,6 +13,7 @@ Sub-routines fuel M.O.I.R.A.'s power. Without them, she'll still be there, but h
 
 Sub-routines include:
 * Database persistence via MongoDB (`shortname`: `DB`)
+* Natural event information via NASA's EONET (`shortname`: `EONET`)
 * Research capabilities via OpenAI (`shortname`: `AI`)
 
 ### Terminal and Discord Logging
@@ -53,6 +54,9 @@ Session administrators will be able to grant Moira permission to proceed with re
 If a database connection wasn't successful during script startup or if the database becomes unreachable during runtime, this command makes it possible to connect to it manually later.
 
 (**Note**: M.O.I.R.A. needs a working database sub-routine for this to have any effect.)
+
+#### `*moira attempt eonet selftest`
+In order to be able to use EONET subroutine in a more finely tuned way, M.O.I.R.A. attempts to query EONET for all of its categories and stores them in her state machine (`MISM`). If this process fails, the programme will raise a warning. Administrator session users can attempt to run this process again to try and set categories successfully.
 
 #### `*moira reset session soft | *moira reset session hard`
 If for some reason M.O.I.R.A. gets stuck in busy state during runtime, session administrators can try sending one of these messages. While a `soft` reset will clear the busy state for the channel where this message is sent, `hard` reset clears the entire object. Unless there is something horribly wrong with all sessions, `soft` reset is a safe way and a good bet to troubleshoot without having to restart.

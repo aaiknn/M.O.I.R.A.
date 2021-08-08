@@ -6,7 +6,7 @@ from time import gmtime as timestamp
 from phrases.default import stateResetHard, stateResetSoft, taskFailed, taskSuccessful
 from phrases.default import sysOpComplete as complete, sysOpCompleteWithSideEffects as soClose
 from utils.db import DBConnection
-from utils.selftests import dbSelftest
+from utils.selftests import dbSelftest, eonetSelftest
 
 async def mindThoseArgs(self, ctx, sessionUser, m):
   c = m.content
@@ -32,6 +32,29 @@ async def mindThoseArgs(self, ctx, sessionUser, m):
             await self.send(ctx, choice(taskSuccessful).format(taskName), dm=True)
           elif self.tism.getSystemState('DB') == 'DOWN':
             await self.send(ctx, choice(taskFailed).format(taskName), dm=True)
+          else:
+            raise RuntimeError
+
+          await self.send(ctx, choice(complete))
+          return 'DONE'
+
+      elif 'eonet' in c:
+        if 'selftest' in c:
+          taskName      = '`Attempting to run EONET selftest`'
+          localErrors   = []
+          localWarnings = []
+
+          try:
+            await eonetSelftest(self, localErrors, localWarnings)
+          except Warning as w:
+            localWarnings.append(w)
+          except Exception as e:
+            localErrors.append(e)
+
+          if self.tism.getSystemState('EONET') == 'UP':
+            await self.send(ctx, choice(taskSuccessful).format(taskName), dm=True)
+          elif self.tism.getSystemState('EONET') == 'DOWN':
+            await self.send(ctx, f'{taskName}: {e}', dm=True)
           else:
             raise RuntimeError
 
@@ -103,6 +126,7 @@ async def mindThoseArgs(self, ctx, sessionUser, m):
         if 'state' in c:
           dbErrors  = self.db.errors
           dbState   = str(self.db.state)
+          eonetCats = str(self.tism.getSystemState('EONET_categories'))
           tism      = str(self.tism.state)
           m         = ''
 
@@ -115,7 +139,10 @@ async def mindThoseArgs(self, ctx, sessionUser, m):
           m += f'```txt\n{dbState}```\n'
 
           m += f'```txt\n- - moira.tism.state :```\n'
-          m += f'{tism}'
+          m += f'{tism}\n\n'
+
+          m += f'```txt\n- - EONET_categories :```\n'
+          m += f'```txt\n{eonetCats}```\n'
 
           await self.send(ctx, m, dm=True)
           await self.send(ctx, choice(complete))

@@ -11,6 +11,11 @@ cancelInput = [
   "nevermind"
 ]
 
+eonet = [
+ "eonet",
+ "natural events"
+]
+
 shenanigans = [
   "date",
   "kiss",

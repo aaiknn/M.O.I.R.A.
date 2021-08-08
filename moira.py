@@ -21,10 +21,11 @@ from settings import prefs
 
 from utils.administration import mindThoseArgs
 from utils.db import DBSetup
+from utils.eonet import handleEonet
 from utils.prompts import handleResponse, parsePrompt, waitForAuthorisedPrompt
 from utils.qualification import qualifyInput, waitForQualificationInput
 from utils.startup import logTests
-from utils.selftests import dbSelftest
+from utils.selftests import dbSelftest, eonetSelftest
 
 load_dotenv()
 
@@ -49,7 +50,8 @@ mongodb_cluster_userpass = env.get('MONGODB_CLUSTER_USERPASS')
 mongodb_db_general = env.get('MONGODB_DB_GENERAL')
 mongodb_collection_general = env.get('MONGODB_DB_GENERAL_COLLECTION')
 
-openai_api_token = str(env.get('OPENAI_API_TOKEN'))
+openai_api_token  = str(env.get('OPENAI_API_TOKEN'))
+nasa_api_token    = str(env.get('NASA_API_KEY'))
 
 # GLOBALS
 globalErrors = []
@@ -64,7 +66,8 @@ moira = MOIRA(
   moira_patience,
   subroutines = {
     'AI': openai_api_token,
-    'DB': ''
+    'DB': '',
+    'EONET': nasa_api_token
   },
   webhook = {
     'id': moira_hooks_logs_id,
@@ -92,7 +95,8 @@ moira.tism = MISM(
 moira.tism.setState(
   moira.tism.systemsKey, {
     'AI': 'DOWN',
-    'DB': 'DOWN'
+    'DB': 'DOWN',
+    'EONET': 'DOWN'
 })
 
 roy = RoyUB(
@@ -119,6 +123,7 @@ async def on_ready():
   moira.tism.setState('promptQueue', {})
 
   await dbSelftest(moira, globalErrors)
+  await eonetSelftest(moira, globalErrors, globalWarnings)
 
   for meh in moira.db.errors:
     globalErrors.append(meh)
@@ -273,8 +278,11 @@ async def initialPrompting(ctx):
         moira.tism.addToPromptHistory(chid, chad, prompt, response)
       moira.tism.removeFromSessionState(chid, 'active_subroutine')
 
-    moira.tism.setBusyState(chid, 'FALSE')
-    moira.tism.setSessionState(chid, None)
+    elif subroutine == 'EONET':
+      await handleEonet(moira, ctx)
+      moira.tism.removeFromSessionState(chid, 'active_subroutine')
+
+    await session.exitSession(chid)
 
     if m.id in moira.mQ:
       moira.tism.dequeue('promptQueue', chid, m)
