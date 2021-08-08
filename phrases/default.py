@@ -78,6 +78,8 @@ decisionReceived = [
 ]
 
 emptyMessage = [
+  "Message content not found. There is nothing to send.",
+  "I have no words. There is nothing to send.",
   "Message is empty. There is nothing to send."
 ]
 
@@ -216,7 +218,12 @@ subroutineUnreachable = [
 ]
 
 sysOpComplete = [
-  "Operation complete."
+  "Operation complete.",
+  "Operation concluded.",
+  "Operation done.",
+  "Operation ended.",
+  "Operation finalised.",
+  "Operation finished."
 ]
 
 sysOpCompleteWithSideEffects = [
@@ -224,9 +231,21 @@ sysOpCompleteWithSideEffects = [
 ]
 
 taskDone = [
-  "Did it.",
-  "Done.",
-  "Done. Did it."
+  "{0}: Did it.",
+  "{0}: Done.",
+  "{0}: Done. Did it."
+]
+
+taskFailed = [
+  "{0}: Didn't work so well.",
+  "{0}: Done unsuccessfully.",
+  "{0}: Task has failed."
+]
+
+taskSuccessful = [
+  "{0}: Check.",
+  "{0}: Done successfully.",
+  "{0}: Task has finished without errors."
 ]
 
 unsureAboutQualifiedTopic = [

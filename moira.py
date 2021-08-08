@@ -23,7 +23,8 @@ from utils.administration import mindThoseArgs
 from utils.db import DBSetup
 from utils.prompts import handleResponse, parsePrompt, waitForAuthorisedPrompt
 from utils.qualification import qualifyInput, waitForQualificationInput
-from utils.startup import dbSelftest, logTests
+from utils.startup import logTests
+from utils.selftests import dbSelftest
 
 load_dotenv()
 

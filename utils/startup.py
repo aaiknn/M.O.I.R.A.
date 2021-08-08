@@ -5,26 +5,9 @@ from discord import Embed
 from discord import AsyncWebhookAdapter
 from time import gmtime as timestamp
 
-import logs.errors as ugh
 import logs.status as status
 from utils.general import getTermStyle
 from utils.webhooks import DiscordHooks
-
-async def dbSelftest(self, scopedErrors):
-  try:
-    selftest = await self.db.selfTest()
-  except ConnectionAbortedError:
-    self.tism.setSystemState('DB', 'DOWN')
-    scopedErrors.append(ugh.database_connection_aborted_error)
-  except:
-    self.tism.setSystemState('DB', 'DOWN')
-    scopedErrors.append(ugh.database_connection_error)
-  else:
-    if not selftest:
-      self.tism.setSystemState('DB', 'DOWN')
-      scopedErrors.append(ugh.database_connection_error_unknown)
-    else:
-      self.tism.setSystemState('DB', 'UP')
 
 async def logTests(noColour, scopedErrors, scopedWarnings, scopedStatus, webhook):
   boldred = getTermStyle('boldred', noColour)
