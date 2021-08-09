@@ -39,15 +39,17 @@ class DBSetup:
   async def retrieveMeta(self, handler):
     client = MongoClient(self.uri)
     try:
-      db = client[self.db_name]
-      collection = db[self.coll_name]
-      meta = collection.find_one({'meta': True})
+      db          = client[self.db_name]
+      collection  = db[self.coll_name]
+      meta        = collection.find_one({'meta': True})
+
       if meta:
         handler.db.state['meta'] = {
           '_id': str(meta['_id']),
           'HEAD': str(meta['HEAD']),
           'TAIL': str(meta['TAIL'])
         }
+
       else:
         documentId = collection.insert_one({'meta': True}).inserted_id
         handler.db.state['meta'] = {
@@ -186,8 +188,9 @@ async def dbConnect(handler, ctx, **options):
     if callback:
       callback(callbackArgs)
   except Exception as e:
-    print(e)
-    handler.db.errors.append(e)
+    errorMessage = f'dbConnect(): {e}'
+    print(errorMessage)
+    handler.db.errors.append(errorMessage)
     return False
   else:
     await handler.send(ctx, choice(connectionSuccessful))

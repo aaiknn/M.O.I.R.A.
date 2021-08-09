@@ -37,7 +37,8 @@ async def parsePrompt(self, ctx, prompt):
         max_tokens=max_tokens
       )
   except Exception as e:
-    print(e)
+    errorMessage = f'Creating OpenAI Completion: {e}'
+    print(errorMessage)
     return False
   else:
     return response
@@ -58,6 +59,8 @@ async def waitForAuthorisedPrompt(self, ctx, sessionUser):
         await self.send(ctx, choice(promptTimeout))
         continue
     except Exception as e:
+      errorMessage = f'Waiting for authorised prompt: {e}'
+      print(errorMessage)
       raise e
     else:
       perm = checkForHighPermissions(self, sessionUser)

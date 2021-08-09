@@ -32,23 +32,25 @@ load_dotenv()
 # ENV
 noColour = env.get('NO_COLOR')
 
-moira_hooks_logs_id = str(env.get('MOIRA_WEBHOOKS_LOGS_ID'))
-moira_hooks_logs_token = str(env.get('MOIRA_WEBHOOKS_LOGS_TOKEN'))
-moira_hooks_open_logs_id = str(env.get('MOIRA_WEBHOOKS_OPEN_LOGS_ID'))
+moira_hooks_logs_id         = str(env.get('MOIRA_WEBHOOKS_LOGS_ID'))
+moira_hooks_logs_token      = str(env.get('MOIRA_WEBHOOKS_LOGS_TOKEN'))
+moira_hooks_open_logs_id    = str(env.get('MOIRA_WEBHOOKS_OPEN_LOGS_ID'))
 moira_hooks_open_logs_token = str(env.get('MOIRA_WEBHOOKS_OPEN_LOGS_TOKEN'))
-moira_nickname = str(env.get('MOIRA_NICKNAME'))
-moira_patience = int(env.get('MOIRA_MAX_PROMPT_LOOPS'))
-moira_prefix = str(env.get('MOIRA_PREFIX'))
 
-moira_administrator_role = str(env.get('MOIRA_ADMIN_ROLE'))
-moira_user_role = str(env.get('MOIRA_USER_ROLE'))
+moira_nickname  = str(env.get('MOIRA_NICKNAME'))
+moira_patience  = int(env.get('MOIRA_MAX_PROMPT_LOOPS'))
+moira_prefix    = str(env.get('MOIRA_PREFIX'))
 
-mongodb_cluster_domain = env.get('MONGODB_CLUSTER_DOMAIN')
-mongodb_cluster_name = env.get('MONGODB_CLUSTER_NAME')
-mongodb_cluster_username = env.get('MONGODB_CLUSTER_USERNAME')
-mongodb_cluster_userpass = env.get('MONGODB_CLUSTER_USERPASS')
-mongodb_db_general = env.get('MONGODB_DB_GENERAL')
-mongodb_collection_general = env.get('MONGODB_DB_GENERAL_COLLECTION')
+moira_administrator_role  = str(env.get('MOIRA_ADMIN_ROLE'))
+moira_user_role           = str(env.get('MOIRA_USER_ROLE'))
+
+mongodb_cluster_domain      = env.get('MONGODB_CLUSTER_DOMAIN')
+mongodb_cluster_name        = env.get('MONGODB_CLUSTER_NAME')
+mongodb_cluster_username    = env.get('MONGODB_CLUSTER_USERNAME')
+mongodb_cluster_userpass    = env.get('MONGODB_CLUSTER_USERPASS')
+
+mongodb_db_general          = env.get('MONGODB_DB_GENERAL')
+mongodb_collection_general  = env.get('MONGODB_DB_GENERAL_COLLECTION')
 
 openai_api_token  = str(env.get('OPENAI_API_TOKEN'))
 nasa_api_token    = str(env.get('NASA_API_KEY'))
@@ -216,6 +218,7 @@ async def initialPrompting(ctx):
   elif type(ctx.channel) == TextChannel:
     session = MoiraSession(ctx, moira, sessionUser)
     await session.createSession(chid, phrase=choice(initialPrompt))
+
     message = await waitForQualificationInput(session.handler, session.ctx)
     if message:
       session.message = message.content
@@ -258,8 +261,9 @@ async def initialPrompting(ctx):
       return
 
     except Exception as e:
-      print('Oh no no no. (This message is really hardly ever printed. Have fun troubleshooting!)')
-      print(e)
+      errorMessage  = f'Error while qualifying input: {e}'
+      print(errorMessage)
+      globalErrors.append(errorMessage)
       await session.exitSession(chid)
       return
 
@@ -267,10 +271,12 @@ async def initialPrompting(ctx):
     subroutine = sessionState['active_subroutine']
 
     if subroutine == 'AI':
-      response = ''
-      prompt = await waitForAuthorisedPrompt(moira, ctx, sessionUser)
+      response  = ''
+      prompt    = await waitForAuthorisedPrompt(moira, ctx, sessionUser)
+
       if prompt:
-        response = await parsePrompt(moira, ctx, prompt.content)
+        response  = await parsePrompt(moira, ctx, prompt.content)
+
         if response:
           await handleResponse(moira, ctx, response)
         else:

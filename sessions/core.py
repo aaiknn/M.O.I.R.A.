@@ -18,12 +18,12 @@ class MOIRA(Bot):
       intents=intents
     )
 
-    self.nickname = nickname
-    self.administrator = admin
-    self.regularUser = regularUser
-    self.patience = patience
-    self.subroutines = options.get('subroutines')
-    self.webhook = options.get('webhook')
+    self.nickname       = nickname
+    self.administrator  = admin
+    self.regularUser    = regularUser
+    self.patience       = patience
+    self.subroutines    = options.get('subroutines')
+    self.webhook        = options.get('webhook')
 
   async def send(self, ctx, m, duration=1, **options):
     isDM = options.get('dm')

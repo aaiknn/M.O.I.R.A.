@@ -26,8 +26,8 @@ async def requestPermission(self, ctx):
   await self.send(ctx, choice(reqPerm))
 
   def check(m):
-    decision = str.lower(m.content)
-    check = checkForHighPermissions(self, m.author)
+    decision  = str.lower(m.content)
+    check     = checkForHighPermissions(self, m.author)
 
     if check and any(word in decision for word in confirm):
       return True
