@@ -1,27 +1,33 @@
 #!/usr/bin/env python3
 
-class MoiraSession:
+from sessions.situation import SessionSituation
+
+class MoiraSession(SessionSituation):
   def __init__(self, discordCtx, moiraInstance, sessionUser):
     self.ctx      = discordCtx
-    self.handler  = moiraInstance
-    self.message  = ''
-    self.user     = sessionUser
 
-  async def createSession(self, chid, **options):
+    super().__init__(
+      channelId   = self.ctx.channel.id,
+      handler     = moiraInstance,
+      sessionUser = sessionUser,
+      userMessage = ''
+    )
+
+  async def createSession(self, **options):
     phrase = options.get('phrase')
     if phrase:
       await self.handler.send(self.ctx, phrase)
-    self.handler.tism.setBusyState(chid, self.user.id)
-    self.handler.tism.setSessionState(chid, self.user.role, self.user.id)
+    self.handler.tism.setBusyState(self.channelId, self.sessionUser.id)
+    self.handler.tism.setSessionState(self.channelId, self.sessionUser.role, self.sessionUser.id)
     return 'CREATIONSUCCESS'
 
-  async def exitSession(self, chid, **options):
+  async def exitSession(self, **options):
     response = options.get('response')
     if response:
       await self.handler.send(self.ctx, response)
-    self.handler.tism.setBusyState(chid, 'FALSE')
-    self.handler.tism.setSessionState(chid, None)
+    self.handler.tism.setBusyState(self.channelId, 'FALSE')
+    self.handler.tism.setSessionState(self.channelId, None)
     return 'EXITSUCCESS'
 
-  def getState(self, chid):
-    return self.handler.tism.getSessionState(chid)
+  def getState(self):
+    return self.handler.tism.getSessionState(self.channelId)

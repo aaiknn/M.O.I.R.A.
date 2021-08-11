@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
-from typing import List
 from aiohttp import ClientSession
 from discord import Embed
 from discord import AsyncWebhookAdapter
+from typing import List
 
+from logs import errors as err
 import phrases.system as syx
 from utils.general import getTermStyle
 from sessions.exceptions import WebhookException
@@ -93,7 +94,7 @@ class Situation:
 
   async def logToDiscord(self, webhook, **options):
     if not webhook:
-      raise WebhookException('Can only log to Discord when webhooks are set up.')
+      raise WebhookException(err.discord_logging_webhook_missing)
 
     title         = options.get('title')
     messageStart  = options.get('messageStart')
@@ -112,7 +113,7 @@ class Situation:
         colourCode    = 0xff4238
 
       for e in self.exceptions:
-        description += f'\n\n```diff\n- {syx.exception} -\n```{e}'
+        description += f'\n\n```diff\n- {syx.exception} -\n```\n{e}'
 
       for f in self.errors:
         description += f'\n\n```diff\n- {syx.error} -\n```\n{f}'

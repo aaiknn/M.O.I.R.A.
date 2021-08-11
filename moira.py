@@ -252,31 +252,31 @@ async def initialPrompting(ctx):
 
   elif type(ctx.channel) == TextChannel:
     session = MoiraSession(ctx, moira, sessionUser)
-    await session.createSession(chid, phrase=choice(initialPrompt))
+    await session.createSession(phrase=choice(initialPrompt))
 
     message = await waitForQualificationInput(session.handler, session.ctx)
     if message:
       session.message = message.content
     else:
-      await session.exitSession(chid)
+      await session.exitSession()
       return
 
     try:
       await qualifyInput(moira, chid, message)
 
     except InterruptedError:
-      await session.exitSession(chid, response=choice(nevermindedThen))
+      await session.exitSession(response=choice(nevermindedThen))
       return
 
     except ModuleNotFoundError:
       if sessionUser.role == 'admin':
-        await session.exitSession(chid, response=choice(currentlyNot))
+        await session.exitSession(response=choice(currentlyNot))
       else:
-        await session.exitSession(chid, response=choice(unsure))
+        await session.exitSession(response=choice(unsure))
       return
 
     except NotImplementedError:
-      await session.exitSession(chid, response=choice(unsure))
+      await session.exitSession(response=choice(unsure))
       return
 
     except MoiraTypeError:
@@ -287,21 +287,21 @@ async def initialPrompting(ctx):
         e = Event('stormoff')
         await e.run(ctx, reason, duration)
       else:
-        await session.exitSession(chid, response=choice(ha))
+        await session.exitSession(response=choice(ha))
       return
 
     except TimeoutError:
-      await session.exitSession(chid)
+      await session.exitSession()
       return
 
     except Exception as e:
       errorMessage = syx.exception_qualifying_input.format(syx.exception, e)
       globals.exceptions.append(errorMessage)
       await globals.log(noColour, webhook=moira.webhook)
-      await session.exitSession(chid)
+      await session.exitSession()
       return
 
-    sessionState = session.getState(chid)
+    sessionState = session.getState()
     subroutine = sessionState['active_subroutine']
 
     if subroutine == 'AI':
@@ -317,11 +317,12 @@ async def initialPrompting(ctx):
           await moira.send(ctx, misc['failsafe'])
         moira.tism.addToPromptHistory(chid, chad, prompt, response)
       moira.tism.removeFromSessionState(chid, 'active_subroutine')
+      await session.exitSession()
 
     elif subroutine == 'EONET':
       await handleEonet(moira, ctx, sit)
       moira.tism.removeFromSessionState(chid, 'active_subroutine')
-      await session.exitSession(chid)
+      await session.exitSession()
 
     if m.id in moira.mQ:
       moira.tism.dequeue('promptQueue', chid, m)
@@ -331,6 +332,7 @@ async def initialPrompting(ctx):
       noColour,
       webhook=moira.webhook
     )
+    sit.resetAll()
 
   else:
     await moira.send(ctx, misc['notInOther'])
