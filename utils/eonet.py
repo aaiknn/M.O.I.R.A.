@@ -1,14 +1,25 @@
 #!/usr/bin/env python3
 
+from sessions.exceptions import UnreachableException
 from utils.api import EonetCall, EonetResponse
 
-async def handleEonet(handler, ctx):
-  s         = EonetCall('manmade')
-  res       = await s.sendCall(limit=6, status='all')
-  resObj    = EonetResponse(res)
-  m         = formatMessage(resObj)
+async def handleEonet(handler, ctx, situation):
+  sit       = situation
 
-  await handler.send(ctx, m)
+  try:
+    s         = EonetCall('manmade')
+    res       = await s.sendCall(limit=6, status='all')
+    resObj    = EonetResponse(res)
+    m         = formatMessage(resObj)
+
+  except UnreachableException as f:
+    sit.exceptions.append(f)
+
+  except Exception as e:
+    sit.exceptions.append(e)
+
+  else:
+    await handler.send(ctx, m)
 
 def formatMessage(resObj):
   title   = resObj.title
@@ -26,9 +37,9 @@ def formatMessage(resObj):
     ititle     = item['title']
 
     if not item['closed']:
-      m += ':o:  '
+      m += ':o:  [ONGOING] '
     else:
-      m += ':green_circle:  '
+      m += ':orange_circle:  [CLOSED] '
 
     m += f'**{ititle}**\n'
 

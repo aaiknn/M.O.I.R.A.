@@ -5,6 +5,7 @@ from random import choice
 
 from intentions.qualification import ai, cancelInput, eonet, shenanigans, sysinfo
 from phrases.default import onesidedBye
+from sessions.exceptions import MoiraTypeError
 
 async def waitForQualificationInput(self, ctx):
   def check(m):
@@ -36,7 +37,7 @@ async def qualifyInput(self, chid, message):
       raise ModuleNotFoundError
 
   elif any(word in message for word in shenanigans):
-    raise TypeError
+    raise MoiraTypeError
 
   elif any(word in message for word in cancelInput):
     raise InterruptedError

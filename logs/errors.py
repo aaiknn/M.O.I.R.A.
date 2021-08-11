@@ -6,5 +6,3 @@ database_connection_error_unknown='Database connection self-test somehow managed
 database_env_missing='Uh-oh: A crucial MongoDB env variable hasn\'t been set, such as the domain, username, or userpass.'
 
 eonet_selftest_failed="EONET connection self-test failed"
-
-moira_discord_error_event='Some shit went down. (That\'s good enough for now.)'

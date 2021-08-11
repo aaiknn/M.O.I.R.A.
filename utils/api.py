@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from requests import get
+from sessions.exceptions import UnreachableException
 
 class ApiCall:
   def __init__(self, **options):
@@ -10,7 +11,7 @@ class ApiCall:
     try:
       await self.sendCall()
     except Exception as e:
-      raise e
+      raise UnreachableException
 
   async def sendCall(self, **options):
     endpoint  = self.endpoint
@@ -27,7 +28,7 @@ class ApiCall:
 
     res = get(uri)
     if not res:
-      raise ConnectionError
+      raise UnreachableException
 
     return res
 

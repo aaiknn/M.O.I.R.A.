@@ -3,18 +3,20 @@
 from asyncio import sleep
 from os import environ as env
 from random import choice
-from sessions.session import MoiraSession
 from discord import DMChannel, TextChannel
 from dotenv import load_dotenv
 
-from logs import errors as ugh, status, warnings as warn
+from logs import status, warnings as warn
 from phrases.default import basicScriptFail, busyState as busyPhrase, ha, initialPrompt, misc, nevermindedThen
 from phrases.default import subroutineUnreachable as currentlyNot, unsureAboutQualifiedTopic as unsure, zerosidedBye
+import phrases.system as syx
 
 from sessions.core import MOIRA
+from sessions.exceptions import MoiraTypeError
 from sessions.royub import Event, RoyUB
-from sessions.tism import MoiraInfamousStateMachine as MISM
 from sessions.session import MoiraSession
+from sessions.situation import SessionSituation, Situation
+from sessions.tism import MoiraInfamousStateMachine as MISM
 from sessions.users import SessionAdmin, SessionUser
 
 from settings import prefs
@@ -24,12 +26,11 @@ from utils.db import DBSetup
 from utils.eonet import handleEonet
 from utils.prompts import handleResponse, parsePrompt, waitForAuthorisedPrompt
 from utils.qualification import qualifyInput, waitForQualificationInput
-from utils.startup import logTests
 from utils.selftests import dbSelftest, eonetSelftest
+from utils.startup import logTests
 
 load_dotenv()
 
-# ENV
 noColour = env.get('NO_COLOR')
 
 moira_hooks_logs_id         = str(env.get('MOIRA_WEBHOOKS_LOGS_ID'))
@@ -55,10 +56,12 @@ mongodb_collection_general  = env.get('MONGODB_DB_GENERAL_COLLECTION')
 openai_api_token  = str(env.get('OPENAI_API_TOKEN'))
 nasa_api_token    = str(env.get('NASA_API_KEY'))
 
-# GLOBALS
-globalErrors = []
-globalStatus = []
-globalWarnings = []
+globals = Situation(
+  errors=[],
+  exceptions=[],
+  status=[],
+  warnings=[]
+)
 
 moira = MOIRA(
   moira_prefix,
@@ -108,8 +111,7 @@ roy = RoyUB(
   moira_hooks_open_logs_token
 )
 
-# EVENTS
-moira.remove_command("help")
+moira.remove_command('help')
 
 roy.manageEvent('stormoff', roy.emitMemberTimeout)
 roy.manageEvent('memberTimeout', roy.memberTimeout)
@@ -124,40 +126,52 @@ async def on_ready():
   moira.tism.resetSessionState()
   moira.tism.setState('promptQueue', {})
 
-  await dbSelftest(moira, globalErrors)
-  await eonetSelftest(moira, globalErrors, globalWarnings)
+  try:
+    await dbSelftest(moira, globals)
+    await eonetSelftest(moira, globals)
+  except:
+    await globals.log(
+      noColour,
+      webhook=moira.webhook)
+    globals.resetAll()
 
   for meh in moira.db.errors:
-    globalErrors.append(meh)
+    globals.errors.append(meh)
 
   if not moira.administrator and not moira.regularUser:
-    globalWarnings.append(warn.moira_admin_and_user_not_set)
+    globals.warnings.append(warn.moira_admin_and_user_not_set)
   elif not moira.administrator:
-    globalStatus.append(status.moira_admin_not_set)
+    globals.status.append(status.moira_admin_not_set)
   elif not moira.regularUser:
-    globalStatus.append(status.moira_user_not_set)
+    globals.status.append(status.moira_user_not_set)
 
   if not openai_api_token:
-    globalWarnings.append(warn.openai_token_not_set)
+    globals.warnings.append(warn.openai_token_not_set)
 
   await logTests(
     noColour,
-    globalErrors,
-    globalWarnings,
-    globalStatus,
-    moira.webhook
+    moira.webhook,
+    globals
   )
+  globals.resetAll()
 
   if moira.tism.getSystemState('DB') == 'UP':
     await moira.db.retrieveMeta(moira)
 
 @moira.event
 async def on_command_error(ctx, err):
-  await ctx.send(f"{choice(basicScriptFail)} `{err}`.")
+  errorMessage = syx.error_on_command.format(err)
+  globals.errors.append(errorMessage)
+  await globals.log(noColour, webhook=moira.webhook)
+  globals.resetAll()
+  await moira.send(ctx, f"{choice(basicScriptFail)} `{err}`.")
 
 @moira.event
 async def on_error(eventName):
-  print(f'{eventName}: {ugh.moira_discord_error_event}')
+  errorMessage = syx.error_on_event.format(eventName)
+  globals.errors.append(errorMessage)
+  await globals.log(noColour, webhook=moira.webhook)
+  globals.resetAll()
 
 @moira.event
 async def on_message(message):
@@ -177,10 +191,10 @@ async def on_message(message):
   pass_context=True
 )
 async def initialPrompting(ctx):
-  m = ctx.message
-  chad = ctx.author.id
-  chid = ctx.channel.id
-  sessionUser = None
+  m                 = ctx.message
+  chad              = ctx.author.id
+  chid              = ctx.channel.id
+  sessionUser       = None
 
   if moira.administrator:
     for entry in ctx.author.roles:
@@ -197,9 +211,30 @@ async def initialPrompting(ctx):
   if not sessionUser:
     return
 
-  outcome = await mindThoseArgs(moira, ctx, sessionUser, m)
-  if outcome == 'DONE':
-    return
+  sit = SessionSituation(
+    handler=moira,
+    channelId=chid,
+    sessionUser=sessionUser,
+    userMessage=m,
+    errors=[],
+    exceptions=[],
+    status=[],
+    warnings=[]
+  )
+
+  try:
+    outcome = await mindThoseArgs(moira, ctx, sit, noColour)
+  except Exception as e:
+    sit.exceptions.append(e)
+    await sit.logIfNecessary(
+      noColour,
+      title='',
+      webhook=moira.webhook
+    )
+    sit.resetAll()
+  else:
+    if outcome == 'DONE':
+      return
 
   angryState = ctx.author.id in moira.tism.state['angryAt'] and len(moira.tism.state['angryAt'][ctx.author.id]) > 0
   if angryState:
@@ -207,7 +242,7 @@ async def initialPrompting(ctx):
 
   busyState = moira.tism.getBusyState(chid)
   if busyState != 'FALSE':
-    await ctx.send(choice(busyPhrase))
+    await moira.send(ctx, choice(busyPhrase))
     moira.tism.queue('promptQueue', chid, m)
     moira.mQ.append(m.id)
     return
@@ -244,7 +279,7 @@ async def initialPrompting(ctx):
       await session.exitSession(chid, response=choice(unsure))
       return
 
-    except TypeError:
+    except MoiraTypeError:
       if sessionUser.role == 'regular':
         reason = prefs.mPref_wrongType
         duration = 4
@@ -256,14 +291,13 @@ async def initialPrompting(ctx):
       return
 
     except TimeoutError:
-      print('Prompt timeout.')
       await session.exitSession(chid)
       return
 
     except Exception as e:
-      errorMessage  = f'Error while qualifying input: {e}'
-      print(errorMessage)
-      globalErrors.append(errorMessage)
+      errorMessage = syx.exception_qualifying_input.format(syx.exception, e)
+      globals.exceptions.append(errorMessage)
+      await globals.log(noColour, webhook=moira.webhook)
       await session.exitSession(chid)
       return
 
@@ -285,14 +319,18 @@ async def initialPrompting(ctx):
       moira.tism.removeFromSessionState(chid, 'active_subroutine')
 
     elif subroutine == 'EONET':
-      await handleEonet(moira, ctx)
+      await handleEonet(moira, ctx, sit)
       moira.tism.removeFromSessionState(chid, 'active_subroutine')
-
-    await session.exitSession(chid)
+      await session.exitSession(chid)
 
     if m.id in moira.mQ:
       moira.tism.dequeue('promptQueue', chid, m)
       moira.mQ.remove(m.id)
+
+    await sit.logIfNecessary(
+      noColour,
+      webhook=moira.webhook
+    )
 
   else:
     await moira.send(ctx, misc['notInOther'])
