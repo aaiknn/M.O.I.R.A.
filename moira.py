@@ -254,15 +254,13 @@ async def initialPrompting(ctx):
     session = MoiraSession(ctx, moira, sessionUser)
     await session.createSession(phrase=choice(initialPrompt))
 
-    message = await waitForQualificationInput(session.handler, session.ctx)
-    if message:
-      session.message = message.content
-    else:
+    session.userMessage = await waitForQualificationInput(session.handler, session.ctx)
+    if not session.userMessage:
       await session.exitSession()
       return
 
     try:
-      await qualifyInput(moira, chid, message)
+      await qualifyInput(moira, chid, session.userMessage)
 
     except InterruptedError:
       await session.exitSession(response=choice(nevermindedThen))
@@ -320,7 +318,7 @@ async def initialPrompting(ctx):
       await session.exitSession()
 
     elif subroutine == 'EONET':
-      await handleEonet(moira, ctx, sit)
+      await handleEonet(ctx, session, sit)
       moira.tism.removeFromSessionState(chid, 'active_subroutine')
       await session.exitSession()
 

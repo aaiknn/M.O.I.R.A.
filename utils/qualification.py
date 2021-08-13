@@ -18,8 +18,8 @@ async def waitForQualificationInput(self, ctx):
   else:
     return message
 
-async def qualifyInput(self, chid, message):
-  message = str.lower(message.content)
+async def qualifyInput(self, chid, userMessage):
+  message = str.lower(userMessage.content)
 
   if any(word in message for word in sysinfo):
     return 'SYSINFO'

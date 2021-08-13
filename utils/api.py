@@ -46,7 +46,7 @@ class EonetCall(ApiCall):
         self.endpoint += f'categories/{self.category}'
 
     else:
-      self.endpoint += 'events'
+      self.endpoint += 'events/geojson'
 
     super().__init__()
 
@@ -57,23 +57,49 @@ class ApiResponse:
 
 class EonetResponse(ApiResponse):
   def __init__(self, res, **options):
-    _dict             = res.json()
-    _list             = []
-    self.title        = _dict['title']
-    self.description  = _dict['description']
+    _dict               = res.json()
+    _list               = []
+    self.title          = _dict['title'] if 'title' in _dict else None
+    self.description    = _dict['description'] if 'description' in _dict else None
+    self.type           = _dict['type'] if 'type' in _dict  else None
 
-    if _dict['events']:
+    # Events API
+    if 'events' in _dict:
       for event in _dict['events']:
-        item = {
-          'categories':   event['categories'],
-          'closed':       event['closed'],
-          'description':  event['description'],
-          'geometry':     event['geometry'],
-          'id':           event['id'],
-          'link':         event['link'],
-          'sources':      event['sources'],
-          'title':        event['title']
+        eventItem = {
+          'categories':     event['categories'],
+          'closed':         event['closed'],
+          'description':    event['description'],
+          'geometry':       event['geometry'],
+          'id':             event['id'],
+          'link':           event['link'],
+          'sources':        event['sources'],
+          'title':          event['title']
         }
-        _list.append(item)
+        _list.append(eventItem)
+
+    # GeoJSON API
+    if 'features' in _dict:
+      for feat in _dict['features']:
+        eventItem = {
+          'geometry':       feat['geometry'],
+          'type':           feat['type']
+        }
+
+        if 'properties' in feat:
+          eventItem['categories']   = feat['properties']['categories']
+          eventItem['closed']       = feat['properties']['closed']
+          eventItem['date']         = feat['properties']['date'] if 'date' in feat['properties'] else None
+          eventItem['description']  = feat['properties']['description']
+          eventItem['id']           = feat['properties']['id']
+          eventItem['link']         = feat['properties']['link']
+          eventItem['sources']      = feat['properties']['sources']
+          eventItem['title']        = feat['properties']['title']
+
+        _list.append(eventItem)
 
     super().__init__(_list, **options)
+
+class CallOptions:
+  def __init__(self, **options):
+    self.options = options
