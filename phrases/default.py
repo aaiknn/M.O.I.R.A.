@@ -124,6 +124,10 @@ initialPrompt = [
   "Yup."
 ]
 
+lessResults = [
+  "I know they're less results than you asked for. Did my best."
+]
+
 nevermindedThen = [
   "Alright.",
   "Another satisfied customer.",

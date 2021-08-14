@@ -54,5 +54,6 @@ eonetCallOptions = {
     'done':     'closed',
     'ended':    'closed',
     'past':     'closed'
-  }
+  },
+  'uncap':      '-f'
 }

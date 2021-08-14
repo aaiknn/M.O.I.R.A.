@@ -6,7 +6,7 @@ from typing import Tuple
 
 from intentions.amounts import amounts
 from intentions.qualification import eonetCallOptions as keywords
-from phrases.default import beforeResearch, emptyEonetResult
+from phrases.default import beforeResearch, emptyEonetResult, lessResults
 from sessions.exceptions import UnreachableException
 from utils.api import EonetCall, EonetResponse, CallOptions
 
@@ -26,21 +26,27 @@ async def handleEonet(ctx, moiraSession, situation):
   except Exception as e:
     sit.exceptions.append(e)
 
+  limit       = options.limit.split('=')
+  limit       = int(limit[1])
+
   try:
     resObj    = EonetResponse(res)
-    m         = formatMessage(resObj)
+    m         = formatMessage(resObj, limit)
   except Exception as e:
     sit.exceptions.append(e)
   else:
     if isinstance(m, Tuple):
       await session.handler.send(ctx, f'{m[1]}')
+
       if m[0] == 'EMPTY':
         await session.handler.send(ctx, choice(emptyEonetResult))
+      elif m[0] == 'LESS':
+        await session.handler.send(ctx, choice(lessResults))
 
     else:
       await session.handler.send(ctx, m)
 
-def formatMessage(resObj):
+def formatMessage(resObj, limit):
   title   = resObj.title if hasattr(resObj, 'title') else None
   desc    = resObj.description if hasattr(resObj, 'description') else None
   type    = resObj.type if hasattr(resObj, 'type') else None
@@ -94,6 +100,10 @@ def formatMessage(resObj):
 
         m += f'\t\t:small_blue_diamond: {sid}: <{surl}>\n'
 
+  if len(resObj.list) < limit:
+    less = ('LESS', m)
+    return less
+
   return m
 
 def mindThoseArgs(cats, userMessage):
@@ -115,15 +125,22 @@ def mindThoseArgs(cats, userMessage):
   for word in mList:
     word = word.lower()
 
-    if word in cats:
+    if word == keywords['uncap']:
+      cap   = None
+      continue
+
+    elif word in cats:
       options.category = word
+      continue
 
     elif word in keywords['status']:
       s = keywords['status'][word]
       options.status  = f'status={s}'
+      continue
 
     elif word in amounts:
       limit = amounts[word]
+      continue
 
     else:
       try:
@@ -133,9 +150,9 @@ def mindThoseArgs(cats, userMessage):
       else:
         limit = _int
 
-    if limit and limit > cap:
-      options.limit = f'limit={cap}'
-    elif limit:
-      options.limit = f'limit={limit}'
+  if limit and cap and limit > cap:
+    options.limit = f'limit={cap}'
+  elif limit:
+    options.limit = f'limit={limit}'
 
   return options
