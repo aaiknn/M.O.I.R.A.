@@ -13,14 +13,13 @@ class ApiCall:
     except Exception as e:
       raise UnreachableException
 
-  async def sendCall(self, **options):
+  async def sendCall(self, *args):
     endpoint  = self.endpoint
 
-    if options:
+    if args:
       endpoint += f'?'
-      for option in options:
-        endpoint += f'{option}='
-        endpoint += str(options[option])
+      for option in args:
+        endpoint += f'{option}'
         endpoint += '&'
       uri = endpoint[:-1]
     else:

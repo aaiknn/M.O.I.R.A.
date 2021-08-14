@@ -77,6 +77,11 @@ decisionReceived = [
   "You're the boss, boss."
 ]
 
+emptyEonetResult = [
+  "There aren't any events of the kind that you were looking for in EONET.",
+  "Your specs aren't returning any results from EONET."
+]
+
 emptyMessage = [
   "Message content not found. There is nothing to send.",
   "I have no words. There is nothing to send.",

@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 ai = [
   "info",
   "information",
@@ -12,8 +14,21 @@ cancelInput = [
 ]
 
 eonet = [
- "eonet",
- "natural events"
+  "drought",
+  "dusthaze",
+  "earthquakes",
+  "eonet",
+  "floods",
+  "landslides",
+  "manmade",
+  "natural events",
+  "sealakeice",
+  "severestorms",
+  "snow",
+  "tempextremes",
+  "volcanoes",
+  "watercolor",
+  "wildfires"
 ]
 
 shenanigans = [
@@ -28,3 +43,16 @@ sysinfo = [
   "sysinfo",
   "system information"
 ]
+
+eonetCallOptions = {
+  'status': {
+    'current':  'open',
+    'live':     'open',
+    'ongoing':  'open',
+    'open':     'open',
+    'closed':   'closed',
+    'done':     'closed',
+    'ended':    'closed',
+    'past':     'closed'
+  }
+}

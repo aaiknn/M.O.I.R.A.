@@ -1,18 +1,26 @@
 #!/usr/bin/env python3
 
+from random import choice
+from re import sub
+from typing import Tuple
+
+from intentions.amounts import amounts
+from intentions.qualification import eonetCallOptions as keywords
+from phrases.default import beforeResearch, emptyEonetResult
 from sessions.exceptions import UnreachableException
 from utils.api import EonetCall, EonetResponse, CallOptions
 
 async def handleEonet(ctx, moiraSession, situation):
   session   = moiraSession
   eventCats = session.handler.tism.getSystemState('EONET_categories')
-
   options   = mindThoseArgs(eventCats, session.userMessage)
   sit       = situation
 
+  await session.handler.send(ctx, choice(beforeResearch))
+
   try:
     s         = EonetCall(options.category)
-    res       = await s.sendCall(limit=6, status='all')
+    res       = await s.sendCall(options.limit, options.status)
   except UnreachableException as f:
     sit.exceptions.append(f)
   except Exception as e:
@@ -24,7 +32,13 @@ async def handleEonet(ctx, moiraSession, situation):
   except Exception as e:
     sit.exceptions.append(e)
   else:
-    await session.handler.send(ctx, m)
+    if isinstance(m, Tuple):
+      await session.handler.send(ctx, f'{m[1]}')
+      if m[0] == 'EMPTY':
+        await session.handler.send(ctx, choice(emptyEonetResult))
+
+    else:
+      await session.handler.send(ctx, m)
 
 def formatMessage(resObj):
   title   = resObj.title if hasattr(resObj, 'title') else None
@@ -46,6 +60,10 @@ def formatMessage(resObj):
   elif title:
     m += '```\n'
 
+  if len(resObj.list) < 1:
+    empt = ('EMPTY', m)
+    return empt
+
   for item in resObj.list:
     idate       = item['date'] if 'date' in item else None
     idesc       = item['description']
@@ -63,7 +81,7 @@ def formatMessage(resObj):
       m += f'**Natural Event**\n'
 
     if idate:
-      m += f'\t\t{idate}\n\n'
+      m += f'\t\t{idate}\n'
 
     if idesc:
       m += f'\t\t{idesc}\n'
@@ -79,10 +97,15 @@ def formatMessage(resObj):
   return m
 
 def mindThoseArgs(cats, userMessage):
-  options   = CallOptions()
-  mList     = userMessage.content.split(' ')
+  content   = sub(r'[^A-Za-z0-9 \-]+', ' ', userMessage.content)
+  mList     = content.split(' ')
+  limit     = 6
+  cap       = 20
 
-  options.category = None
+  options           = CallOptions()
+  options.category  = None
+  options.limit     = f'limit={limit}'
+  options.status    = 'status=all'
 
   for i in range(1, len(cats)):
     j = i - 1
@@ -94,5 +117,25 @@ def mindThoseArgs(cats, userMessage):
 
     if word in cats:
       options.category = word
+
+    elif word in keywords['status']:
+      s = keywords['status'][word]
+      options.status  = f'status={s}'
+
+    elif word in amounts:
+      limit = amounts[word]
+
+    else:
+      try:
+        _int = int(word)
+      except ValueError:
+        pass
+      else:
+        limit = _int
+
+    if limit and limit > cap:
+      options.limit = f'limit={cap}'
+    elif limit:
+      options.limit = f'limit={limit}'
 
   return options
