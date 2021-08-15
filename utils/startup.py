@@ -3,6 +3,7 @@
 from time import gmtime as timestamp
 
 import logs.status as stat
+import phrases.system as syx
 
 async def logTests(noColour, webhook, situation):
   t             = timestamp()
@@ -18,4 +19,4 @@ async def logTests(noColour, webhook, situation):
         title=title,
         messageStart=messageStart)
     except Exception as e:
-      situation.exceptions.append(f'Logging startup situation to Discord: {e}')
+      situation.exceptions.append(f'{syx.logging_startup_to_discord}: {e}')

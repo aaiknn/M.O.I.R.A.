@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 misc = {
   'failsafe': 'I don\'t yet know how to do that.',
   'notInDMs': 'Hey. Just wanting to let you know that I\'m not ready to do any work in direct messages.',

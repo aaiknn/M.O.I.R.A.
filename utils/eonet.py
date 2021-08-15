@@ -7,6 +7,7 @@ from typing import Tuple
 
 from intentions.amounts import amounts
 from intentions.qualification import eonetCallOptions as keywords
+from phrases import terms
 from phrases.default import beforeResearch, emptyEonetResult, lessResults
 from sessions.exceptions import UnreachableException
 from utils.api import EonetCall, EonetResponse, CallOptions
@@ -62,7 +63,7 @@ def formatMessage(resObj, limit):
   elif type:
     embed.title += type
   else:
-    embed.title += 'Earth Observatory Natural Event Tracker (EONET)'
+    embed.title += terms.eonet_response_fallback_title
 
   if desc:
     embed.description += desc
@@ -81,14 +82,14 @@ def formatMessage(resObj, limit):
     fieldText   = ''
 
     if not item['closed']:
-      fieldTitle += ':o:  [ONGOING] '
+      fieldTitle += f':o:  [{terms.eonet_event_status_ongoing}] '
     else:
-      fieldTitle += ':orange_circle:  [CLOSED] '
+      fieldTitle += f':orange_circle:  [{terms.eonet_event_status_closed}] '
 
     if ititle:
       fieldTitle += ititle
     else:
-      fieldTitle += 'Natural Event'
+      fieldTitle += terms.eonet_event_fallback_title
 
     if idate:
       fieldText += f'{idate}\n'
@@ -97,7 +98,7 @@ def formatMessage(resObj, limit):
       fieldText += f'{idesc}\n'
 
     if len(isources) > 0:
-      fieldText += '__Sources:__\n'
+      fieldText += f'__{terms.eonet_event_sources}:__\n'
       for source in isources:
         sid   = source['id']
         surl  = source['url']
@@ -105,7 +106,7 @@ def formatMessage(resObj, limit):
         fieldText += f'\t\t:small_blue_diamond: [{sid}]({surl})\n'
 
     if len(fieldText) == 0:
-      fieldText += '_No available details_'
+      fieldText += f'_{terms.eonet_event_no_details}_'
 
     embed.add_field(
       name=fieldTitle,
@@ -114,7 +115,7 @@ def formatMessage(resObj, limit):
 
   embed.set_footer(
     icon_url='https://pbs.twimg.com/profile_images/1321163587679784960/0ZxKlEKB_400x400.jpg',
-    text='EONET is the Earth Observatory Natural Event Tracker. EONET is a repository of metadata about natural events. EONET is accessible via web services. EONET will drive your natural event application. EONET metadata is for visualization and general information purposes only and should not be construed as \'official\' with regards to spatial or temporal extent.'
+    text=terms.eonet_response_footer_text
   )
 
   if len(resObj.list) < limit:

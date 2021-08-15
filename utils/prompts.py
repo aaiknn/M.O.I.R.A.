@@ -4,6 +4,8 @@ import openai
 from random import choice
 
 from data.airesponse import OpenAIResponse
+from phrases import system as syx
+from phrases import terms
 from phrases.default import beforeResearch, promptPlease, promptTimeout, onesidedBye
 from utils.commands import checkForHighPermissions, requestPermission
 
@@ -13,10 +15,16 @@ async def handleResponse(self, ctx, response):
     fReason   = choice['finish_reason']
     text      = choice['text']
 
-    message = f'{text}\n\n`Stopped because: {fReason}`'
+    message = f'{text}\n\n`{terms.openai_response_stopped_because}: {fReason}`'
     await self.send(ctx, message)
 
-  await self.send(ctx, f'```txt\nID: {_obj.id}, Date: {_obj.date}, Object: {_obj.thing}, Model: {_obj.model}```')
+  meta  = f'```txt\n'
+  meta += f'{terms.openai_response_prop_id}: {_obj.id}, '
+  meta += f'{terms.openai_response_prop_date}: {_obj.date}, '
+  meta += f'{terms.openai_response_prop_object}: {_obj.thing}, '
+  meta += f'{terms.openai_response_prop_model}: {_obj.model}```'
+
+  await self.send(ctx, meta)
 
 async def parsePrompt(self, ctx, prompt):
   await self.send(ctx, choice(beforeResearch))
@@ -37,7 +45,7 @@ async def parsePrompt(self, ctx, prompt):
         max_tokens=max_tokens
       )
   except Exception as e:
-    errorMessage = f'Creating OpenAI Completion: {e}'
+    errorMessage = f'{syx.creating_openai_completion}: {e}'
     print(errorMessage)
     return False
   else:
@@ -59,7 +67,7 @@ async def waitForAuthorisedPrompt(self, ctx, sessionUser):
         await self.send(ctx, choice(promptTimeout))
         continue
     except Exception as e:
-      errorMessage = f'Waiting for authorised prompt: {e}'
+      errorMessage = f'{syx.waiting_for_authorised_prompt}: {e}'
       print(errorMessage)
       raise e
     else:

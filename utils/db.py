@@ -6,6 +6,7 @@ from random import choice
 
 import logs.errors as ugh
 from phrases.default import connectionSuccessful
+import phrases.system as syx
 
 class DBSetup:
   def __init__(self, domain, name, username, userpass, database, collection):
@@ -77,7 +78,7 @@ class DBConnection:
       db = self.client[self.setup.db_name]
       collection = db[self.setup.coll_name]
     except Exception as e:
-      self.errors.append(f'Connecting to self.setup.coll_name: {e}')
+      self.errors.append(f'{syx.connecting_to.format(self.setup.coll_name)}: {e}')
       raise ConnectionAbortedError
     else:
       return collection
@@ -86,7 +87,7 @@ class DBConnection:
     try:
       self.client.close
     except Exception as e:
-      self.errors.append(f'Closing client session: {e}')
+      self.errors.append(f'{syx.closing_client_connection}: {e}')
       raise e
 
   async def restoreState(self, tismStateObj, identifier='last'):
@@ -97,7 +98,7 @@ class DBConnection:
       meta = collection.find_one({'meta': True})
       document = collection.find_one({'_id': meta['TAIL']})
     except Exception as e:
-      self.errors.append(f'Retrieving tail document: {e}')
+      self.errors.append(f'{syx.retrieving_tail_document}: {e}')
       raise e
     finally:
       await self.disconnect()
@@ -125,7 +126,7 @@ class DBConnection:
     try:
       documentId = collection.insert_one(state).inserted_id
     except Exception as e:
-      self.errors.append(f'Inserting state document: {e}')
+      self.errors.append(f'{syx.inserting_state_document}: {e}')
       raise e
 
     newTail = str(documentId)
@@ -143,7 +144,7 @@ class DBConnection:
       if not updatedTail.matched_count == 1:
         raise FileNotFoundError
     except Exception as e:
-      self.errors.append(f'Updating current tail document: {e}')
+      self.errors.append(f'{syx.updating_last_tail_document}: {e}')
       raise e
 
     try:
@@ -156,7 +157,7 @@ class DBConnection:
       if not updatedMeta.matched_count == 1:
         raise Warning
     except Exception as e:
-      self.errors.append(f'Updating meta document: {e}')
+      self.errors.append(f'{syx.updating_meta_document}: {e}')
       raise e
 
     newMeta = {
