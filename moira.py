@@ -26,7 +26,7 @@ from utils.db import DBSetup
 from utils.eonet import handleEonet
 from utils.prompts import handleResponse, parsePrompt, waitForAuthorisedPrompt
 from utils.qualification import qualifyInput, waitForQualificationInput
-from utils.selftests import dbSelftest, eonetSelftest
+from utils.selftests import dbSelftest, eonetSelftest, openAiSelftest
 from utils.startup import logTests
 
 load_dotenv()
@@ -129,6 +129,7 @@ async def on_ready():
   try:
     await dbSelftest(moira, globals)
     await eonetSelftest(moira, globals)
+    await openAiSelftest(moira, globals)
   except:
     await globals.log(
       noColour,

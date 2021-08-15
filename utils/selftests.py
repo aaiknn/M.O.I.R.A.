@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 
+import openai
+
+from data.airesponse import OpenAIResponse
 from logs import errors as ugh, warnings as warn
+import phrases.system as syx
 from sessions.exceptions import SubroutineException, MetaNotFoundException
 from utils.api import EonetCall
 
@@ -42,3 +46,28 @@ async def eonetSelftest(self, situation):
     raise MetaNotFoundException(warn.eonet_categories_not_set)
 
   self.tism.setSystemState('EONET_categories', categories)
+
+async def openAiSelftest(self, situation):
+  openai.api_key  = self.subroutines['AI']
+  engine          = 'ada'
+  max_tokens      = 6
+  prompt          = 'Q: Ping!\nA: Pong.\nQ: Ping!!\nA: ...Pong.\nQ: Ping--\nA: '
+
+  try:
+    response = openai.Completion.create(
+      engine=engine,
+      prompt=prompt,
+      max_tokens=max_tokens
+    )
+    res = OpenAIResponse(response)
+
+  except Exception as e:
+    self.tism.setSystemState('AI', 'DOWN')
+    exceptionMessage = f'{syx.openai_selftest}: {e}'
+    situation.errors.append(exceptionMessage)
+    return False
+
+  else:
+    self.tism.setSystemState('AI', 'UP')
+    situation.status.append(f'{syx.openai_selftest_response.format(engine)}: "{res.text[0]}"')
+    return response
