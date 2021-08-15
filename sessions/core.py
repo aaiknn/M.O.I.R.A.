@@ -26,13 +26,24 @@ class MOIRA(Bot):
     self.webhook        = options.get('webhook')
 
   async def send(self, ctx, m, duration=1, **options):
-    isDM  = options.get('dm')
-    embed = options.get('embed')
+    isCode      = options.get('code')
+    isDM        = options.get('dm')
+    codeFormat  = options.get('codeFormat')
+    embed       = options.get('embed')
 
     if len(m) > 1800:
       mList = [m[i:i+1800] for i in range(0, len(m), 1800)]
       for entry in mList:
-        await sendMessage(ctx, duration, entry, isDM, embed)
+        if isCode:
+          format = codeFormat if codeFormat else 'txt'
+          entry = f'```{format}\n{entry}```'
+
+        await sendMessage(ctx, duration, entry, isDM)
+
+    elif isCode:
+      m = f'```txt\n{m}```'
+      await sendMessage(ctx, duration, m, isDM)
+
     else:
       await sendMessage(ctx, duration, m, isDM, embed)
 

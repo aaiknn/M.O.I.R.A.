@@ -31,11 +31,18 @@ async def handleEonet(ctx, moiraSession, situation):
   limit       = options.limit.split('=')
   limit       = int(limit[1])
 
+  if options.raw:
+    cStr      = res._content.decode('utf-8')
+    m         = cStr.replace('\t', '').replace('\n', '')
+    await session.handler.send(ctx, m, code=True)
+    return
+
   try:
     resObj    = EonetResponse(res)
     m         = formatMessage(resObj, limit)
   except Exception as e:
     sit.exceptions.append(e)
+
   else:
     if isinstance(m, Tuple):
       await session.handler.send(ctx, embed=f'{m[1]}')
@@ -133,6 +140,7 @@ def mindThoseArgs(cats, userMessage):
   options           = CallOptions()
   options.category  = None
   options.limit     = f'limit={limit}'
+  options.raw       = False
   options.status    = 'status=all'
 
   for i in range(1, len(cats)):
@@ -145,6 +153,10 @@ def mindThoseArgs(cats, userMessage):
 
     if word == keywords['uncap']:
       cap   = None
+      continue
+
+    elif word == keywords['raw']:
+      options.raw = True
       continue
 
     elif word in cats:

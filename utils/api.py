@@ -51,15 +51,15 @@ class EonetCall(ApiCall):
 
 class ApiResponse:
   def __init__(self, _list, **options):
-    self.options  = options
-    self.list     = _list
+    self.list         = _list
+    self.options      = options
 
 class EonetResponse(ApiResponse):
   def __init__(self, res, **options):
     _dict               = res.json()
     _list               = []
-    self.title          = _dict['title'] if 'title' in _dict else None
     self.description    = _dict['description'] if 'description' in _dict else None
+    self.title          = _dict['title'] if 'title' in _dict else None
     self.type           = _dict['type'] if 'type' in _dict  else None
 
     # Events API
