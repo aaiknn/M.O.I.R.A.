@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from discord import Embed
 from random import choice
 from re import sub
 from typing import Tuple
@@ -36,7 +37,7 @@ async def handleEonet(ctx, moiraSession, situation):
     sit.exceptions.append(e)
   else:
     if isinstance(m, Tuple):
-      await session.handler.send(ctx, f'{m[1]}')
+      await session.handler.send(ctx, embed=f'{m[1]}')
 
       if m[0] == 'EMPTY':
         await session.handler.send(ctx, choice(emptyEonetResult))
@@ -44,30 +45,30 @@ async def handleEonet(ctx, moiraSession, situation):
         await session.handler.send(ctx, choice(lessResults))
 
     else:
-      await session.handler.send(ctx, m)
+      await session.handler.send(ctx, '', embed=m)
 
 def formatMessage(resObj, limit):
   title   = resObj.title if hasattr(resObj, 'title') else None
   desc    = resObj.description if hasattr(resObj, 'description') else None
   type    = resObj.type if hasattr(resObj, 'type') else None
 
-  if title or desc or type:
-    m = '```txt'
-  else:
-    m = ''
+  embed = Embed(
+    title='',
+    description=''
+  )
 
   if title:
-   m += f'\n{title}\n'
+    embed.title += title
+  elif type:
+    embed.title += type
+  else:
+    embed.title += 'Earth Observatory Natural Event Tracker (EONET)'
 
   if desc:
-    m += f'\n{desc}```\n'
-  elif type:
-    m += f'\n{type}```\n'
-  elif title:
-    m += '```\n'
+    embed.description += desc
 
   if len(resObj.list) < 1:
-    empt = ('EMPTY', m)
+    empt = ('EMPTY', embed)
     return empt
 
   for item in resObj.list:
@@ -76,35 +77,51 @@ def formatMessage(resObj, limit):
     isources    = item['sources']
     ititle      = item['title']
 
+    fieldTitle  = ''
+    fieldText   = ''
+
     if not item['closed']:
-      m += ':o:  [ONGOING] '
+      fieldTitle += ':o:  [ONGOING] '
     else:
-      m += ':orange_circle:  [CLOSED] '
+      fieldTitle += ':orange_circle:  [CLOSED] '
 
     if ititle:
-      m += f'**{ititle}**\n'
+      fieldTitle += ititle
     else:
-      m += f'**Natural Event**\n'
+      fieldTitle += 'Natural Event'
 
     if idate:
-      m += f'\t\t{idate}\n'
+      fieldText += f'{idate}\n'
 
     if idesc:
-      m += f'\t\t{idesc}\n'
+      fieldText += f'{idesc}\n'
 
     if len(isources) > 0:
-      m += f'\t\tSources:\n'
+      fieldText += '__Sources:__\n'
       for source in isources:
         sid   = source['id']
         surl  = source['url']
 
-        m += f'\t\t:small_blue_diamond: {sid}: <{surl}>\n'
+        fieldText += f'\t\t:small_blue_diamond: [{sid}]({surl})\n'
+
+    if len(fieldText) == 0:
+      fieldText += '_No available details_'
+
+    embed.add_field(
+      name=fieldTitle,
+      value=fieldText
+    )
+
+  embed.set_footer(
+    icon_url='https://pbs.twimg.com/profile_images/1321163587679784960/0ZxKlEKB_400x400.jpg',
+    text='EONET is the Earth Observatory Natural Event Tracker. EONET is a repository of metadata about natural events. EONET is accessible via web services. EONET will drive your natural event application. EONET metadata is for visualization and general information purposes only and should not be construed as \'official\' with regards to spatial or temporal extent.'
+  )
 
   if len(resObj.list) < limit:
-    less = ('LESS', m)
+    less = ('LESS', embed)
     return less
 
-  return m
+  return embed
 
 def mindThoseArgs(cats, userMessage):
   content   = sub(r'[^A-Za-z0-9 \-]+', ' ', userMessage.content)

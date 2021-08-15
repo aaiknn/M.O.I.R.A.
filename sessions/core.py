@@ -26,21 +26,22 @@ class MOIRA(Bot):
     self.webhook        = options.get('webhook')
 
   async def send(self, ctx, m, duration=1, **options):
-    isDM = options.get('dm')
+    isDM  = options.get('dm')
+    embed = options.get('embed')
 
     if len(m) > 1800:
       mList = [m[i:i+1800] for i in range(0, len(m), 1800)]
       for entry in mList:
-        await sendMessage(ctx, duration, entry, isDM)
+        await sendMessage(ctx, duration, entry, isDM, embed)
     else:
-      await sendMessage(ctx, duration, m, isDM)
+      await sendMessage(ctx, duration, m, isDM, embed)
 
-async def sendMessage(ctx, duration, m, isDM):
-  if len(m) == 0:
+async def sendMessage(ctx, duration, m, isDM, embed=''):
+  if len(m) == 0 and not embed:
     m += choice(emptyMessage)
 
   if isDM:
-    await ctx.author.send(m)
+    await ctx.author.send(m, embed=embed)
   else:
     await texting(ctx, duration)
-    await ctx.send(m)
+    await ctx.send(m, embed=embed)
