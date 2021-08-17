@@ -26,6 +26,8 @@ basicScriptFail = [
 ]
 
 beforeResearch = [
+  "Checking that now.",
+  "Digging into it.",
   "Diving into that now.",
   "Doing the research now.",
   "Finding you an answer now.",
@@ -36,8 +38,10 @@ beforeResearch = [
   "I'll be back with you in a moment.",
   "I'm having a look at it, one moment.",
   "I'm on it!",
+  "Let's see.",
   "Let me see if I can't find you anything good.",
   "Looking into it now.",
+  "Okay, let me take a look.",
   "On it!",
   "One moment, please.",
   "Piece of cake, just a sec..."
@@ -92,17 +96,23 @@ emptyMessage = [
 
 ha = [
   "Ha. Funny.",
+  "Hah. That's funny.",
   "Heh."
 ]
 
 initialPrompt = [
   "All set!",
   "Alright?",
+  "Can I help you out on something?",
   "Go ahead.",
   "Go on...",
+  "Go right ahead.",
+  "Got any research I can help you with?",
   "Hello! What do you need?",
   "Hey, what's up?",
+  "Heya!",
   "Hi!",
+  "Hiya!",
   "I'm here.",
   "I'm listening.",
   "Listening.",
@@ -127,7 +137,8 @@ initialPrompt = [
 ]
 
 lessResults = [
-  "I know they're less results than you asked for. Did my best."
+  "I know they're less results than you asked for. Did my best.",
+  "These are all the results there were."
 ]
 
 nevermindedThen = [
@@ -135,6 +146,7 @@ nevermindedThen = [
   "Another satisfied customer.",
   "K, bye!",
   "Neverminded then.",
+  "Okee-dokee.",
   "Right. Next time, then. Right?"
 ]
 
@@ -175,9 +187,11 @@ processSuspended = [
 ]
 
 promptPlease = [
+  "Got a good prompt?",
   "Hand me a prompt.",
   "Prompt, please.",
-  "What's your prompt?"
+  "What's your prompt?",
+  "What would you like to prompt for?"
 ]
 
 promptTimeout = [
