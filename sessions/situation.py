@@ -42,7 +42,7 @@ class Situation:
     webhook       = options.get('webhook')
 
     if not title:
-      title       = 'Situation Log'
+      title       = syx.situation_log_fallback_title
 
     if webhook['id'] and webhook['token']:
       await self.logToDiscord(webhook, title=title, messageStart=messageStart)
@@ -79,16 +79,16 @@ class Situation:
       description += f'{messageStart}\n'
 
     for e in self.exceptions:
-      description += f'\n{boldred}{syx.exception}{colourend} {e}'
+      description += f'\n{boldred}{syx.exception}:{colourend} {e}'
 
     for f in self.errors:
-      description += f'\n{boldred}{syx.error}{colourend} {f}'
+      description += f'\n{boldred}{syx.error}:{colourend} {f}'
 
     for meh in self.warnings:
-      description += f'\n{boldyellow}{syx.warning}{colourend} {meh}'
+      description += f'\n{boldyellow}{syx.warning}:{colourend} {meh}'
 
     for fact in self.status:
-      description += f'\n{bold}{syx.status}{colourend} {fact}'
+      description += f'\n{bold}{syx.status}:{colourend} {fact}'
 
     print(description)
 
