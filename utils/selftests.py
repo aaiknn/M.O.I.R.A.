@@ -52,12 +52,14 @@ async def openAiSelftest(self, situation):
   engine          = 'ada'
   max_tokens      = 6
   prompt          = 'Q: Ping!\nA: Pong.\nQ: Ping!!\nA: ...Pong.\nQ: Ping--\nA: '
+  stop_seq        = ['Q:']
 
   try:
     response = openai.Completion.create(
       engine=engine,
       prompt=prompt,
-      max_tokens=max_tokens
+      max_tokens=max_tokens,
+      stop=stop_seq
     )
     res = OpenAIResponse(response)
 
