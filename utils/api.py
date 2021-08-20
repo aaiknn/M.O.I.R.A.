@@ -5,6 +5,7 @@ from sessions.exceptions import UnreachableException
 
 class ApiCall:
   def __init__(self, **options):
+    self.endpoint = options.get('endpoint')
     self.token    = options.get('token')
 
   async def apiSelftest(self):
@@ -36,18 +37,18 @@ class EonetCall(ApiCall):
     self.category = category
     self.options  = options
 
-    self.endpoint = 'https://eonet.sci.gsfc.nasa.gov/api/v3/'
+    endpoint = 'https://eonet.sci.gsfc.nasa.gov/api/v3/'
 
     if self.category:
       if self.category == 'categories':
-        self.endpoint += 'categories'
+        endpoint += 'categories'
       else:
-        self.endpoint += f'categories/{self.category}'
+        endpoint += f'categories/{self.category}'
 
     else:
-      self.endpoint += 'events/geojson'
+      endpoint += 'events/geojson'
 
-    super().__init__()
+    super().__init__(endpoint=endpoint)
 
 class ApiResponse:
   def __init__(self, _list, **options):
