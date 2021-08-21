@@ -67,6 +67,11 @@ consentualBye = [
   "Was nice chatting with you."
 ]
 
+complete = [
+  "Completed.",
+  "Done."
+]
+
 decisionReceived = [
   "Alea iacta est.",
   "Alright.",

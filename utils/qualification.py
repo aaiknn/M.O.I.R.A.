@@ -3,7 +3,7 @@
 from asyncio import TimeoutError
 from random import choice
 
-from intentions.qualification import ai, cancelInput, eonet, shenanigans, sysinfo
+from intentions.qualification import ai, cancelInput, eonet, shenanigans, sysinfo, wsys
 from phrases.default import onesidedBye
 from sessions.exceptions import MoiraTypeError
 
@@ -33,6 +33,12 @@ async def qualifyInput(self, chid, userMessage):
   elif any(word in message for word in eonet):
     if self.tism.getSystemState('EONET') == 'UP':
       self.tism.addToSessionState(chid, 'active_subroutine', 'EONET')
+    else:
+      raise ModuleNotFoundError
+
+  elif any(word in message for word in wsys):
+    if self.tism.getSystemState('WSYS') == 'SILENT':
+      self.tism.addToSessionState(chid, 'active_subroutine', 'WSYS')
     else:
       raise ModuleNotFoundError
 

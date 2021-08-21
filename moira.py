@@ -28,6 +28,7 @@ from utils.prompts import handleResponse, parsePrompt, waitForAuthorisedPrompt
 from utils.qualification import qualifyInput, waitForQualificationInput
 from utils.selftests import dbSelftest, eonetSelftest, openAiSelftest
 from utils.startup import logTests
+from utils.wsys import handleWsys
 
 load_dotenv()
 
@@ -57,6 +58,7 @@ openai_api_token  = str(env.get('OPENAI_API_TOKEN'))
 nasa_api_token    = str(env.get('NASA_API_KEY'))
 
 globals = Situation(
+  noColour=noColour,
   errors=[],
   exceptions=[],
   status=[],
@@ -72,7 +74,8 @@ moira = MOIRA(
   subroutines = {
     'AI': openai_api_token,
     'DB': '',
-    'EONET': nasa_api_token
+    'EONET': nasa_api_token,
+    'WSYS': []
   },
   webhook = {
     'id': moira_hooks_logs_id,
@@ -101,7 +104,8 @@ moira.tism.setState(
   moira.tism.systemsKey, {
     'AI': 'DOWN',
     'DB': 'DOWN',
-    'EONET': 'DOWN'
+    'EONET': 'DOWN',
+    'WSYS': 'SILENT'
 })
 
 roy = RoyUB(
@@ -131,9 +135,7 @@ async def on_ready():
     await eonetSelftest(moira, globals)
     await openAiSelftest(moira, globals)
   except:
-    await globals.log(
-      noColour,
-      webhook=moira.webhook)
+    await globals.log(webhook=moira.webhook)
     globals.resetAll()
 
   for meh in moira.db.errors:
@@ -150,7 +152,6 @@ async def on_ready():
     globals.warnings.append(warn.openai_token_not_set)
 
   await logTests(
-    noColour,
     moira.webhook,
     globals
   )
@@ -163,7 +164,7 @@ async def on_ready():
 async def on_command_error(ctx, err):
   errorMessage = syx.error_on_command.format(err)
   globals.errors.append(errorMessage)
-  await globals.log(noColour, webhook=moira.webhook)
+  await globals.log(webhook=moira.webhook)
   globals.resetAll()
   await moira.send(ctx, f"{choice(basicScriptFail)} `{err}`.")
 
@@ -171,7 +172,7 @@ async def on_command_error(ctx, err):
 async def on_error(eventName):
   errorMessage = syx.error_on_event.format(eventName)
   globals.errors.append(errorMessage)
-  await globals.log(noColour, webhook=moira.webhook)
+  await globals.log(webhook=moira.webhook)
   globals.resetAll()
 
 @moira.event
@@ -215,6 +216,7 @@ async def initialPrompting(ctx):
   sit = SessionSituation(
     handler=moira,
     channelId=chid,
+    noColour=noColour,
     sessionUser=sessionUser,
     userMessage=m,
     errors=[],
@@ -224,11 +226,10 @@ async def initialPrompting(ctx):
   )
 
   try:
-    outcome = await mindThoseArgs(moira, ctx, sit, noColour)
+    outcome = await mindThoseArgs(moira, ctx, sit)
   except Exception as e:
     sit.exceptions.append(e)
     await sit.logIfNecessary(
-      noColour,
       title='',
       webhook=moira.webhook
     )
@@ -296,7 +297,7 @@ async def initialPrompting(ctx):
     except Exception as e:
       errorMessage = syx.exception_qualifying_input.format(syx.exception, e)
       globals.exceptions.append(errorMessage)
-      await globals.log(noColour, webhook=moira.webhook)
+      await globals.log(webhook=moira.webhook)
       await session.exitSession()
       return
 
@@ -323,14 +324,16 @@ async def initialPrompting(ctx):
       moira.tism.removeFromSessionState(chid, 'active_subroutine')
       await session.exitSession()
 
+    elif subroutine == 'WSYS':
+      await handleWsys(ctx, session, sit)
+      moira.tism.removeFromSessionState(chid, 'active_subroutine')
+      await session.exitSession()
+
     if m.id in moira.mQ:
       moira.tism.dequeue('promptQueue', chid, m)
       moira.mQ.remove(m.id)
 
-    await sit.logIfNecessary(
-      noColour,
-      webhook=moira.webhook
-    )
+    await sit.logIfNecessary(title=syx.session_log, webhook=moira.webhook)
     sit.resetAll()
 
   else:

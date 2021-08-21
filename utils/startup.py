@@ -5,12 +5,12 @@ from time import gmtime as timestamp
 import logs.status as stat
 import phrases.system as syx
 
-async def logTests(noColour, webhook, situation):
+async def logTests(webhook, situation):
   t             = timestamp()
   title         = stat.discord_webhook_log_moira_up_title
   messageStart  = stat.discord_webhook_log_moira_up_message.format(t)
 
-  situation.logToTerm(noColour=noColour, messageStart=messageStart, title=title)
+  situation.logToTerm(messageStart=messageStart, title=title)
 
   if webhook['id'] and webhook['token']:
     try:

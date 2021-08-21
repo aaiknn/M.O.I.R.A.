@@ -15,6 +15,7 @@ Sub-routines include:
 * Database persistence via MongoDB (`shortname`: `DB`)
 * Natural event information via NASA's EONET (`shortname`: `EONET`)
 * Research capabilities via OpenAI (`shortname`: `AI`)
+* Catastrophy Warning System (`shortname`: `WSYS`)
 
 ### Terminal and Discord Logging
 There are two ways in which relevant things can be logged for two different purposes:

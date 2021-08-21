@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import phrases.system as syx
 from requests import get
 from sessions.exceptions import UnreachableException
 
@@ -12,7 +13,7 @@ class ApiCall:
     try:
       await self.sendCall()
     except Exception as e:
-      raise UnreachableException
+      raise UnreachableException(e)
 
   async def sendCall(self, *args):
     endpoint  = self.endpoint
@@ -28,7 +29,7 @@ class ApiCall:
 
     res = get(uri)
     if not res:
-      raise UnreachableException
+      raise UnreachableException(f'{syx.api} {syx.unreachable}')
 
     return res
 

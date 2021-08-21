@@ -11,7 +11,7 @@ from sessions.exceptions import MoiraError
 from utils.db import DBConnection
 from utils.selftests import dbSelftest, eonetSelftest
 
-async def mindThoseArgs(self, ctx, sessionSituation, noColour):
+async def mindThoseArgs(self, ctx, sessionSituation):
   sit         = sessionSituation
   c           = sit.userMessage.content
   chid        = sit.channelId
@@ -44,7 +44,7 @@ async def mindThoseArgs(self, ctx, sessionSituation, noColour):
           for f in localErrors:
             sit.errors.append(f)
 
-          await sit.logIfNecessary(noColour, webhook=sit.handler.webhook)
+          await sit.logIfNecessary(webhook=sit.handler.webhook)
 
           await self.send(ctx, choice(complete))
           return 'DONE'
@@ -73,7 +73,7 @@ async def mindThoseArgs(self, ctx, sessionSituation, noColour):
           else:
             raise MoiraError(syx.subroutine_state_schrodinger.format('EONET'))
 
-          await sit.logIfNecessary(noColour, webhook=sit.handler.webhook)
+          await sit.logIfNecessary(webhook=sit.handler.webhook)
 
           await self.send(ctx, choice(complete))
           return 'DONE'
@@ -105,7 +105,7 @@ async def mindThoseArgs(self, ctx, sessionSituation, noColour):
           else:
             await self.send(ctx, choice(taskSuccessful).format(taskName), dm=True)
 
-          await sit.logIfNecessary(noColour, webhook=sit.handler.webhook)
+          await sit.logIfNecessary(webhook=sit.handler.webhook)
 
           await self.send(ctx, choice(complete))
           return 'DONE'
@@ -147,7 +147,7 @@ async def mindThoseArgs(self, ctx, sessionSituation, noColour):
           for ugh in s.errors:
             self.db.errors.append(ugh)
 
-          await sit.logIfNecessary(noColour, webhook=sit.handler.webhook)
+          await sit.logIfNecessary(webhook=sit.handler.webhook)
 
           return 'DONE'
 

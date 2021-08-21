@@ -13,6 +13,8 @@ from utils.webhooks import DiscordHooks
 
 class Situation:
   def __init__(self, **options):
+    self.noColour   = options.get('noColour')
+
     self.errors     = options.get('errors')
     self.exceptions = options.get('exceptions')
     self.status     = options.get('status')
@@ -36,7 +38,7 @@ class Situation:
   def resetWarnings(self):
     self.warnings = []
 
-  async def log(self, noColour, **options):
+  async def log(self, **options):
     title         = options.get('title')
     messageStart  = options.get('messageStart')
     webhook       = options.get('webhook')
@@ -47,9 +49,9 @@ class Situation:
     if webhook['id'] and webhook['token']:
       await self.logToDiscord(webhook, title=title, messageStart=messageStart)
 
-    self.logToTerm(noColour=noColour, title=title, messageStart=messageStart)
+    self.logToTerm(title=title, messageStart=messageStart)
 
-  async def logIfNecessary(self, noColour, **options):
+  async def logIfNecessary(self, **options):
     need = False
 
     for prop, val in vars(self).items():
@@ -58,11 +60,11 @@ class Situation:
         break
 
     if need:
-      await self.log(noColour, **options)
+      await self.log(**options)
 
   def logToTerm(self, **options):
     title         = options.get('title')
-    noColour      = options.get('noColour')
+    noColour      = self.noColour
     messageStart  = options.get('messageStart')
 
     boldred       = getTermStyle('boldred', noColour)

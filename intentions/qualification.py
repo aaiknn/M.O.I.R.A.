@@ -44,6 +44,10 @@ sysinfo = [
   "system information"
 ]
 
+wsys = [
+  "wsys"
+]
+
 eonetCallOptions = {
   'status': {
     'current':  'open',
