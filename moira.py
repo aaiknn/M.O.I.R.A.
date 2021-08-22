@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from sys import path
 
 from logs import status, warnings as warn
-from phrases.default import basicScriptFail, busyState as busyPhrase, complete, ha, initialPrompt, misc, nevermindedThen
+from phrases.default import basicScriptFail, busyState as busyPhrase, ha, initialPrompt, misc, nevermindedThen
 from phrases.default import subroutineUnreachable as currentlyNot, unsureAboutQualifiedTopic as unsure, zerosidedBye
 import phrases.system as syx
 
@@ -340,7 +340,10 @@ async def initialPrompting(ctx):
       moira.tism.dequeue('promptQueue', chid, m)
       moira.mQ.remove(m.id)
 
-    await sit.logIfNecessary(title=syx.session_log, webhook=moira.webhook)
+    await sit.logIfNecessary(
+      title=syx.session_log,
+      webhook=moira.webhook
+    )
     sit.resetAll()
 
   else:

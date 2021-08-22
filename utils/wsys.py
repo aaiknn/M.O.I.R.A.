@@ -5,7 +5,7 @@ from time import gmtime, strftime
 
 from data.wsys import _dict as endpoints
 from phrases.default import beforeWsys, complete
-import phrases.system as syx
+from phrases import terms, system as syx
 from sessions.exceptions import UnreachableException
 from utils.api import ApiCall
 from utils.reports import Report
@@ -14,13 +14,13 @@ async def handleWsys(ctx, moiraSession, situation, paths):
   data      = []
   session   = moiraSession
   sit       = situation
-  timestamp = strftime('%A %d %B %Y, %H:%M:%S %Z', gmtime())
+  timestamp = strftime(terms.wsys_report_timestamp_format, gmtime())
 
   await session.handler.send(ctx, choice(beforeWsys))
 
   data.append({
-    'title':  'WSYS Sub-Routine-Report',
-    'date':   f'for {timestamp}',
+    'title':  terms.wsys_report_title,
+    'date':   timestamp,
     'apis':   []
   })
 
