@@ -47,6 +47,10 @@ beforeResearch = [
   "Piece of cake, just a sec..."
 ]
 
+beforeWsys = [
+  "About to call all the endpoints, then generate a report."
+]
+
 busyState = [
   "Currently working on something already.",
   "Hold on, I'm in the middle of something.",

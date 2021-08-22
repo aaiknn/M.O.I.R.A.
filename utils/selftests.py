@@ -71,5 +71,5 @@ async def openAiSelftest(self, situation):
 
   else:
     self.tism.setSystemState('AI', 'UP')
-    situation.status.append(f'{syx.openai_selftest_response.format(engine)}: "{res.text[0]}"')
+    situation.status.append(f'{syx.openai_selftest_response.format(engine)}: `{res.text[0]}`')
     return response

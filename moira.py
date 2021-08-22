@@ -5,9 +5,10 @@ from os import environ as env
 from random import choice
 from discord import DMChannel, TextChannel
 from dotenv import load_dotenv
+from sys import path
 
 from logs import status, warnings as warn
-from phrases.default import basicScriptFail, busyState as busyPhrase, ha, initialPrompt, misc, nevermindedThen
+from phrases.default import basicScriptFail, busyState as busyPhrase, complete, ha, initialPrompt, misc, nevermindedThen
 from phrases.default import subroutineUnreachable as currentlyNot, unsureAboutQualifiedTopic as unsure, zerosidedBye
 import phrases.system as syx
 
@@ -56,6 +57,11 @@ mongodb_collection_general  = env.get('MONGODB_DB_GENERAL_COLLECTION')
 
 openai_api_token  = str(env.get('OPENAI_API_TOKEN'))
 nasa_api_token    = str(env.get('NASA_API_KEY'))
+
+thisPath = path[0]
+paths = {
+  'reports': f'{thisPath}/reports/'
+}
 
 globals = Situation(
   noColour=noColour,
@@ -226,7 +232,8 @@ async def initialPrompting(ctx):
   )
 
   try:
-    outcome = await mindThoseArgs(moira, ctx, sit)
+    if isinstance(sessionUser, SessionAdmin):
+      outcome = await mindThoseArgs(moira, ctx, sit)
   except Exception as e:
     sit.exceptions.append(e)
     await sit.logIfNecessary(
@@ -325,7 +332,7 @@ async def initialPrompting(ctx):
       await session.exitSession()
 
     elif subroutine == 'WSYS':
-      await handleWsys(ctx, session, sit)
+      await handleWsys(ctx, session, sit, paths)
       moira.tism.removeFromSessionState(chid, 'active_subroutine')
       await session.exitSession()
 

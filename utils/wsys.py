@@ -4,16 +4,18 @@ from random import choice
 from typing import List
 
 from data.wsys import _dict as endpoints
-from phrases.default import beforeResearch, complete
+from phrases.default import beforeWsys, complete
 import phrases.system as syx
 from sessions.exceptions import UnreachableException
 from utils.api import ApiCall
+from utils.reports import Report
 
-async def handleWsys(ctx, moiraSession, situation):
+async def handleWsys(ctx, moiraSession, situation, paths):
+  data    = ''
   session = moiraSession
   sit     = situation
 
-  await session.handler.send(ctx, choice(beforeResearch))
+  await session.handler.send(ctx, choice(beforeWsys))
 
   for item in endpoints.items():
     name      = item[0]
@@ -31,15 +33,20 @@ async def handleWsys(ctx, moiraSession, situation):
       m = res.json()
       if isinstance(m, List):
         for item in m:
-          for entry in item.items():
-            print(entry)
-            break
-          break
+          if len(item) > 0:
+            data += f'{item}\n'
 
       else:
-        for item in m.items():
-          print(item)
-          break
+        if len(m) > 0:
+          data += f'{m}\n'
+
+  report = Report(
+    fileName='report.pdf',
+    path=paths['reports']
+  )
+  report.create()
+  report.write(data=data)
+  await report.send(ctx)
 
   await session.handler.send(ctx, choice(complete))
   await sit.logIfNecessary(
