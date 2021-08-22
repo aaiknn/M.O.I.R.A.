@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from random import choice
-from typing import List
+from time import gmtime, strftime
 
 from data.wsys import _dict as endpoints
 from phrases.default import beforeWsys, complete
@@ -11,15 +11,27 @@ from utils.api import ApiCall
 from utils.reports import Report
 
 async def handleWsys(ctx, moiraSession, situation, paths):
-  data    = ''
-  session = moiraSession
-  sit     = situation
+  data      = []
+  session   = moiraSession
+  sit       = situation
+  timestamp = strftime('%A %d %B %Y, %H:%M:%S %Z', gmtime())
 
   await session.handler.send(ctx, choice(beforeWsys))
 
+  data.append({
+    'title':  'WSYS Sub-Routine-Report',
+    'date':   f'for {timestamp}',
+    'apis':   []
+  })
+
   for item in endpoints.items():
     name      = item[0]
-    endpoint  = item[1]
+    details   = item[1]
+
+    endpoint      = details['endpoint']
+    responseType  = details['responseType']
+    subtitle      = details['subtitle']
+    title         = details['title']
 
     try:
       s         = ApiCall(endpoint=endpoint)
@@ -28,29 +40,78 @@ async def handleWsys(ctx, moiraSession, situation, paths):
       sit.warnings.append(f'{name}: {f}')
     except Exception as e:
       sit.exceptions.append(f'{name}: {e}')
-
     else:
-      m = res.json()
-      if isinstance(m, List):
-        for item in m:
-          if len(item) > 0:
-            data += f'{item}\n'
+      json      = res.json()
 
-      else:
-        if len(m) > 0:
-          data += f'{m}\n'
+      try:
+        parseWsysResponse(responseType, json, title=title, subtitle=subtitle, data=data)
+        data[0]['apis'].append(title)
+      except Exception as e:
+        raise Exception(e)
 
-  report = Report(
-    fileName='report.pdf',
-    path=paths['reports']
-  )
-  report.create()
-  report.write(data=data)
-  await report.send(ctx)
+  try:
+    report = Report(
+      fileName='report.pdf',
+      path=paths['reports']
+    )
+    report.create()
+    report.write(data=data)
+    await report.send(ctx)
 
-  await session.handler.send(ctx, choice(complete))
+  except Exception as e:
+    raise Exception(e)
+
+  else:
+    await session.handler.send(ctx, choice(complete))
+
   await sit.logIfNecessary(
     title=f'{syx.x_situation_log.format(syx.wsys_call)}',
     webhook=sit.handler.webhook
   )
   sit.resetAll()
+
+def parseWsysResponse(responseType, json, itemData='', **options):
+  data      = options.get('data')
+  itemData  = itemData
+  response  = json
+  subtitle  = options.get('subtitle')
+  title     = options.get('title')
+
+  data.append((title, 'Heading2'))
+  data.append((subtitle, 'Heading3'))
+
+  if responseType == 'PGO':
+    for item in response:
+      itemData += item['water']['longname']
+      itemData += ' at '
+      itemData += item['shortname']
+      if 'km' in item:
+        itemData += ' ('
+        itemData += str(item['km'])
+        itemData += ')'
+      itemData += ': '
+      itemData += str(item['number'])
+      itemData += '\n'
+
+    data.append(itemData)
+
+  elif responseType == 'UKF':
+    for item in response['items']:
+      headline = item['severity']
+      headline += ' - '
+      headline += item['floodArea']['county']
+      headline += '. '
+      headline += item['floodArea']['riverOrSea']
+
+      itemData += item['eaAreaName']
+      itemData += ', '
+      itemData += item['description']
+      itemData += '\n\n'
+      itemData += item['message']
+      itemData += '\n\n'
+
+      data.append((headline, 'Heading4'))
+      data.append(itemData)
+
+      headline = ''
+      itemData = ''
