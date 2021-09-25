@@ -8,6 +8,12 @@ A Discord bot that will talk to a few APIs on your behalf.
 ### NO_COLOR
 M.O.I.R.A. will respect your preference for term colour output depending on whether or not the `NO_COLOR` environment variable is set as promoted by [no-color.org](https://no-color.org/) initiative.
 
+### Options
+#### Simple Options
+```txt
+-d        Launches Moira in debug mode with heavy logging.
+```
+
 ### Sub-routines
 Sub-routines fuel M.O.I.R.A.'s power. Without them, she'll still be there, but her helpfulness will be limited.
 

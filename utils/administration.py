@@ -9,16 +9,41 @@ import phrases.system as syx
 
 from sessions.exceptions import MoiraError
 from utils.db import DBConnection
+from utils.prompts import handleResponse, parsePrompt
 from utils.selftests import dbSelftest, eonetSelftest
 
-async def mindThoseArgs(self, ctx, sessionSituation):
+async def mindThoseArgs(self, ctx, sessionSituation, globalSession):
   sit         = sessionSituation
+  sat         = globalSession
   c           = sit.userMessage.content
   chid        = sit.channelId
+  chad        = ctx.author
   sessionUser = sit.sessionUser
 
   if sessionUser.role == 'admin':
-    if 'attempt' in c:
+    if c == f'{sit.handler.command_prefix}{sit.handler.nickname} ?':
+      for prop, val in vars(sit.handler).items():
+        await chad.send(f'moira.PROP: {prop}, moira.PROPVAL: {val}')
+      await sat.logIfNecessary(
+        title=syx.status_inquiry_title,
+        webhook=sit.handler.webhook
+      )
+
+      return 'DONE'
+
+    elif 'interactive' in c:
+      await chad.send('DMSESSION')
+      try:
+        message = await self.wait_for('message', timeout=60.0)
+      except Exception as e:
+        sit.exeptions.append(e)
+      else:
+        response = await parsePrompt(sit.handler, ctx, message)
+        await handleResponse(sit.handler, ctx, response)
+
+      return 'DONE'
+
+    elif 'attempt' in c:
       if 'db' in c:
         if 'connection' in c:
           taskName    = syx.attempt_db_connection

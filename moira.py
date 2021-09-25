@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from argparse import ArgumentParser
 from asyncio import sleep
 from os import environ as env
 from random import choice
@@ -60,8 +61,17 @@ nasa_api_token    = str(env.get('NASA_API_KEY'))
 
 thisPath = path[0]
 paths = {
-  'reports': f'{thisPath}/reports/'
+  'assets':   f'{thisPath}/assets/',
+  'reports':  f'{thisPath}/reports/'
 }
+
+parser = ArgumentParser()
+parser.add_argument(
+  '-d',
+  action='store_true',
+  help='Launches Moira in debug mode with heavy logging.',
+)
+args = parser.parse_args()
 
 globals = Situation(
   noColour=noColour,
@@ -126,24 +136,35 @@ moira.remove_command('help')
 roy.manageEvent('stormoff', roy.emitMemberTimeout)
 roy.manageEvent('memberTimeout', roy.memberTimeout)
 
-@moira.event
-async def on_ready():
+async def readyUp():
   print(status.discord_moira_onready.format(moira))
+  globals.status.append(status.discord_moira_onready.format(moira))
 
+async def setStates():
   moira.tism.setState('angryAt', {prefs.mPref_larry_name: prefs.mPref_larry_reason})
   moira.tism.resetBusyState()
   moira.tism.resetPromptHistory()
   moira.tism.resetSessionState()
   moira.tism.setState('promptQueue', {})
 
+  if args.d:
+    globals.status.append(status.discord_moira_onready_onstatesready.format(moira))
+
+async def runTests():
   try:
     await dbSelftest(moira, globals)
     await eonetSelftest(moira, globals)
     await openAiSelftest(moira, globals)
+
+    if args.d:
+      globals.status.append(status.discord_moira_onready_onstatesready.format(moira))
+
   except:
     await globals.log(webhook=moira.webhook)
     globals.resetAll()
+    globals.status.append(status.discord_moira_onready_onglobalsreset.format(moira))
 
+async def noteExceptions():
   for meh in moira.db.errors:
     globals.errors.append(meh)
 
@@ -157,22 +178,50 @@ async def on_ready():
   if not openai_api_token:
     globals.warnings.append(warn.openai_token_not_set)
 
+  if args.d:
+    globals.status.append(status.discord_moira_onready_onlogtests.format(moira))
+
+@moira.event
+async def on_ready():
+  await readyUp()
+  await setStates()
+  await runTests()
+  await noteExceptions()
+
   await logTests(
     moira.webhook,
     globals
   )
-  globals.resetAll()
+
+  if args.d:
+    globals.status.append(status.discord_moira_onready_ontestslogged.format(moira))
+    globals.resetAll()
+    globals.status.append(status.discord_moira_onready_onglobalsreset.format(moira))
 
   if moira.tism.getSystemState('DB') == 'UP':
     await moira.db.retrieveMeta(moira)
+    if args.d:
+      globals.status.append(status.discord_moira_onready_ondbmetaretrieved.format(moira))
 
 @moira.event
 async def on_command_error(ctx, err):
+  globals.status.append(status.discord_moira_onevent_oncommanderror.format(moira))
   errorMessage = syx.error_on_command.format(err)
   globals.errors.append(errorMessage)
   await globals.log(webhook=moira.webhook)
+
+  if args.d:
+    globals.status.append(status.discord_moira_onready_onglobalslogged.format(moira))
+
   globals.resetAll()
+
+  if args.d:
+    globals.status.append(status.discord_moira_onready_onglobalsreset.format(moira))
+
   await moira.send(ctx, f"{choice(basicScriptFail)} `{err}`.")
+
+  if args.d:
+    globals.status.append(status.discord_moira_onevent_oncommanderror_stop.format(moira))
 
 @moira.event
 async def on_error(eventName):
@@ -233,7 +282,7 @@ async def initialPrompting(ctx):
 
   try:
     if isinstance(sessionUser, SessionAdmin):
-      outcome = await mindThoseArgs(moira, ctx, sit)
+      outcome = await mindThoseArgs(moira, ctx, sit, globals)
   except Exception as e:
     sit.exceptions.append(e)
     await sit.logIfNecessary(
