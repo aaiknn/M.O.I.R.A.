@@ -8,10 +8,11 @@ from discord import DMChannel, TextChannel
 from dotenv import load_dotenv
 from sys import path
 
-from logs import status, warnings as warn
-from phrases.default import basicScriptFail, busyState as busyPhrase, ha, initialPrompt, misc, nevermindedThen
+from logs import status
+from phrases.default import busyState as busyPhrase, ha, initialPrompt, misc, nevermindedThen
 from phrases.default import subroutineUnreachable as currentlyNot, unsureAboutQualifiedTopic as unsure, zerosidedBye
 import phrases.system as syx
+from settings import prefs
 
 from sessions.core import MOIRA
 from sessions.exceptions import MoiraTypeError
@@ -21,15 +22,14 @@ from sessions.situation import SessionSituation, Situation
 from sessions.tism import MoiraInfamousStateMachine as MISM
 from sessions.users import SessionAdmin, SessionUser
 
-from settings import prefs
-
 from utils.administration import mindThoseArgs
+from utils.commands import handleCommandError
 from utils.db import DBSetup
 from utils.eonet import handleEonet
+from utils.logging import Loggers, TerminalLogger
 from utils.prompts import handleResponse, parsePrompt, waitForAuthorisedPrompt
 from utils.qualification import qualifyInput, waitForQualificationInput
-from utils.selftests import dbSelftest, eonetSelftest, openAiSelftest
-from utils.startup import logTests
+from utils.startup import logTests, noteExceptions, readyUp, setStates, runTests
 from utils.wsys import handleWsys
 
 load_dotenv()
@@ -72,6 +72,15 @@ parser.add_argument(
   help='Launches Moira in debug mode with heavy logging.',
 )
 args = parser.parse_args()
+
+loggers = Loggers(
+  log_level=0
+)
+
+if args.d:
+  loggers.log_level=1
+  tLogger = TerminalLogger()
+  loggers.registerLogger(tLogger)
 
 globals = Situation(
   noColour=noColour,
@@ -136,92 +145,31 @@ moira.remove_command('help')
 roy.manageEvent('stormoff', roy.emitMemberTimeout)
 roy.manageEvent('memberTimeout', roy.memberTimeout)
 
-async def readyUp():
-  print(status.discord_moira_onready.format(moira))
-  globals.status.append(status.discord_moira_onready.format(moira))
-
-async def setStates():
-  moira.tism.setState('angryAt', {prefs.mPref_larry_name: prefs.mPref_larry_reason})
-  moira.tism.resetBusyState()
-  moira.tism.resetPromptHistory()
-  moira.tism.resetSessionState()
-  moira.tism.setState('promptQueue', {})
-
-  if args.d:
-    globals.status.append(status.discord_moira_onready_onstatesready.format(moira))
-
-async def runTests():
-  try:
-    await dbSelftest(moira, globals)
-    await eonetSelftest(moira, globals)
-    await openAiSelftest(moira, globals)
-
-    if args.d:
-      globals.status.append(status.discord_moira_onready_onstatesready.format(moira))
-
-  except:
-    await globals.log(webhook=moira.webhook)
-    globals.resetAll()
-    globals.status.append(status.discord_moira_onready_onglobalsreset.format(moira))
-
-async def noteExceptions():
-  for meh in moira.db.errors:
-    globals.errors.append(meh)
-
-  if not moira.administrator and not moira.regularUser:
-    globals.warnings.append(warn.moira_admin_and_user_not_set)
-  elif not moira.administrator:
-    globals.status.append(status.moira_admin_not_set)
-  elif not moira.regularUser:
-    globals.status.append(status.moira_user_not_set)
-
-  if not openai_api_token:
-    globals.warnings.append(warn.openai_token_not_set)
-
-  if args.d:
-    globals.status.append(status.discord_moira_onready_onlogtests.format(moira))
-
 @moira.event
 async def on_ready():
-  await readyUp()
-  await setStates()
-  await runTests()
-  await noteExceptions()
+  readyUp(moira, globals)
+  setStates(moira, globals, loggers)
+  await runTests(moira, globals, loggers)
+  noteExceptions(moira, openai_api_token, globals, loggers)
 
   await logTests(
     moira.webhook,
     globals
   )
 
-  if args.d:
+  if loggers.log_level > 0:
     globals.status.append(status.discord_moira_onready_ontestslogged.format(moira))
     globals.resetAll()
     globals.status.append(status.discord_moira_onready_onglobalsreset.format(moira))
 
   if moira.tism.getSystemState('DB') == 'UP':
     await moira.db.retrieveMeta(moira)
-    if args.d:
+    if loggers.log_level > 0:
       globals.status.append(status.discord_moira_onready_ondbmetaretrieved.format(moira))
 
 @moira.event
 async def on_command_error(ctx, err):
-  globals.status.append(status.discord_moira_onevent_oncommanderror.format(moira))
-  errorMessage = syx.error_on_command.format(err)
-  globals.errors.append(errorMessage)
-  await globals.log(webhook=moira.webhook)
-
-  if args.d:
-    globals.status.append(status.discord_moira_onready_onglobalslogged.format(moira))
-
-  globals.resetAll()
-
-  if args.d:
-    globals.status.append(status.discord_moira_onready_onglobalsreset.format(moira))
-
-  await moira.send(ctx, f"{choice(basicScriptFail)} `{err}`.")
-
-  if args.d:
-    globals.status.append(status.discord_moira_onevent_oncommanderror_stop.format(moira))
+  await handleCommandError(moira, ctx, globals, err, loggers)
 
 @moira.event
 async def on_error(eventName):

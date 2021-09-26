@@ -1,51 +1,26 @@
 #!/usr/bin/env python3
 
-from asyncio import TimeoutError
 from random import choice
 
-from intentions.commands import confirm, reject
-from phrases.default import decisionReceived, permissionDenied, permissionGranted, requestPermission as reqPerm, requestTimeout
-from sessions.users import SessionAdmin, SessionUser
+from logs import status
+from phrases.default import basicScriptFail
+import phrases.system as syx
 
-def checkForHighPermissions(self, userObj):
-  check = False
+async def handleCommandError(moira, ctx, globals, error, loggers):
+  globals.status.append(status.discord_moira_onevent_oncommanderror.format(moira))
+  errorMessage = syx.error_on_command.format(error)
+  globals.errors.append(errorMessage)
+  await globals.log(webhook=moira.webhook)
 
-  if isinstance(userObj, SessionAdmin):
-    return True
-  elif isinstance(userObj, SessionUser):
-    return False
-  else:
-    for role in userObj.roles:
-      if self.administrator in str(role):
-        check = True
-        break
+  if loggers.log_level > 0:
+    globals.status.append(status.discord_moira_onready_onglobalslogged.format(moira))
 
-  return check
+  globals.resetAll()
 
-async def requestPermission(self, ctx):
-  await self.send(ctx, choice(reqPerm))
+  if loggers.log_level > 0:
+    globals.status.append(status.discord_moira_onready_onglobalsreset.format(moira))
 
-  def check(m):
-    decision  = str.lower(m.content)
-    check     = checkForHighPermissions(self, m.author)
+  await moira.send(ctx, f"{choice(basicScriptFail)} `{error}`.")
 
-    if check and any(word in decision for word in confirm):
-      return True
-    elif any(word in decision for word in reject):
-      raise PermissionError
-    else:
-      return False
-
-  try:
-    perm = await self.wait_for('message', check=check, timeout=60.0)
-  except TimeoutError:
-    await self.send(ctx, choice(requestTimeout))
-    return False
-  except PermissionError:
-    await self.send(ctx, f'{choice(decisionReceived)} {choice(permissionDenied)}')
-    return False
-  except Exception as e:
-    raise e
-  else:
-    await self.send(ctx, f'{choice(decisionReceived)} {choice(permissionGranted)}')
-    return perm
+  if loggers.log_level > 0:
+    globals.status.append(status.discord_moira_onevent_oncommanderror_stop.format(moira))

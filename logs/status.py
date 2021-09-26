@@ -8,7 +8,7 @@ discord_moira_onready_onglobalslogged       = 'Global state if the programme has
 discord_moira_onready_onglobalsreset        = 'Global state of the programme has been reset.'
 discord_moira_onready_onlogtests            = 'Logging prepping states for {0.nickname}.'
 discord_moira_onready_onstatesready         = 'States in {0.nickname} set.'
-discord_moira_onready_onselftestready       = 'Selftests for {0.nickname} complete.'
+discord_moira_onready_onselftestsready      = 'Selftests for {0.nickname} complete.'
 discord_moira_onready_ontestslogged         = 'Prepping states for {0.nickname} have been logged.'
 
 discord_webhook_log_moira_up_title    = 'Moira up!'
