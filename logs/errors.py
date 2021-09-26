@@ -7,4 +7,4 @@ database_env_missing                = 'Uh-oh: A crucial MongoDB env variable has
 
 discord_logging_webhook_missing     = 'Discord log webhooks are missing. Can only log to Discord when webhooks are set up.'
 
-eonet_selftest_failed               = "EONET connection self-test failed"
+eonet_selftest_failed               = "EONET connection self-test failed."

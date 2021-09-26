@@ -9,7 +9,7 @@ from utils.selftests import dbSelftest, eonetSelftest, openAiSelftest
 
 def readyUp(moira, globals):
   print(status.discord_moira_onready.format(moira))
-  globals.status.append(status.discord_moira_onready.format(moira))
+  globals.status.appendMessage(status.discord_moira_onready.format(moira))
 
 def setStates(moira, globals, loggers):
   moira.tism.setState('angryAt', {prefs.mPref_larry_name: prefs.mPref_larry_reason})
@@ -19,7 +19,7 @@ def setStates(moira, globals, loggers):
   moira.tism.setState('promptQueue', {})
 
   if loggers.log_level > 0:
-    globals.status.append(status.discord_moira_onready_onstatesready.format(moira))
+    globals.status.appendMessage(status.discord_moira_onready_onstatesready.format(moira))
 
 async def runTests(moira, globals, loggers):
   try:
@@ -28,38 +28,38 @@ async def runTests(moira, globals, loggers):
     await openAiSelftest(moira, globals)
 
     if loggers.log_level > 0:
-      globals.status.append(status.discord_moira_onready_onselftestsready.format(moira))
+      globals.status.appendMessage(status.discord_moira_onready_onselftestsready.format(moira))
 
   except Exception as e:
     globals.exceptions.append(e)
     await globals.log(webhook=moira.webhook)
     globals.resetAll()
-    globals.status.append(status.discord_moira_onready_ontestslogged.format(moira))
-    globals.status.append(status.discord_moira_onready_onglobalsreset.format(moira))
+    globals.status.appendMessage(status.discord_moira_onready_ontestslogged.format(moira))
+    globals.status.appendMessage(status.discord_moira_onready_onglobalsreset.format(moira))
 
 def noteExceptions(moira, openai_api_token, globals, loggers):
   for meh in moira.db.errors:
-    globals.errors.append(meh)
+    globals.errors.appendMessage(meh)
 
   if not moira.administrator and not moira.regularUser:
-    globals.warnings.append(warn.moira_admin_and_user_not_set)
+    globals.warnings.appendMessage(warn.moira_admin_and_user_not_set)
   elif not moira.administrator:
-    globals.status.append(status.moira_admin_not_set)
+    globals.status.appendMessage(status.moira_admin_not_set)
   elif not moira.regularUser:
-    globals.status.append(status.moira_user_not_set)
+    globals.status.appendMessage(status.moira_user_not_set)
 
   if not openai_api_token:
-    globals.warnings.append(warn.openai_token_not_set)
+    globals.warnings.appendMessage(warn.openai_token_not_set)
 
   if loggers.log_level > 0:
-    globals.status.append(status.discord_moira_onready_onlogtests.format(moira))
+    globals.status.appendMessage(status.discord_moira_onready_onlogtests.format(moira))
 
 async def retrieveDbMeta(moira, globals, loggers):
   if moira.tism.getSystemState('DB') == 'UP':
     await moira.db.retrieveMeta(moira)
 
     if loggers.log_level > 0:
-      globals.status.append(status.discord_moira_onready_ondbmetaretrieved.format(moira))
+      globals.status.appendMessage(status.discord_moira_onready_ondbmetaretrieved.format(moira))
 
 async def logStartup(webhook, situation):
   t             = timestamp()
@@ -75,4 +75,4 @@ async def logStartup(webhook, situation):
         title=title,
         messageStart=messageStart)
     except Exception as e:
-      situation.exceptions.append(f'{syx.logging_startup_to_discord}: {e}')
+      situation.exceptions.appendMessage(f'{syx.logging_startup_to_discord}: {e}')

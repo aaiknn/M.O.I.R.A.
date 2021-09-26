@@ -3,6 +3,7 @@
 from aiohttp import ClientSession
 from discord import Embed
 from discord import AsyncWebhookAdapter
+from time import gmtime as timestamp
 from typing import List
 
 from logs import errors as err
@@ -11,14 +12,23 @@ from utils.general import getTermStyle
 from sessions.exceptions import WebhookException
 from utils.webhooks import DiscordHooks
 
+class SituationListing():
+  def __init__(self):
+    self.contents = []
+
+  def appendMessage(self, message):
+    t     = timestamp()
+    time  = f'{t.tm_mday}-{t.tm_mon}-{t.tm_year}, {t.tm_hour}:{t.tm_min}:{t.tm_sec}'
+    self.contents.append(f'{time} -- {message}')
+
 class Situation:
   def __init__(self, **options):
     self.noColour   = options.get('noColour')
 
-    self.errors     = options.get('errors')
-    self.exceptions = options.get('exceptions')
-    self.status     = options.get('status')
-    self.warnings   = options.get('warnings')
+    self.errors     = SituationListing()
+    self.exceptions = SituationListing()
+    self.status     = SituationListing()
+    self.warnings   = SituationListing()
 
   def resetAll(self):
     self.resetErrors()
@@ -27,16 +37,16 @@ class Situation:
     self.resetWarnings()
 
   def resetErrors(self):
-    self.errors = []
+    self.errors.contents = []
 
   def resetExceptions(self):
-    self.exceptions = []
+    self.exceptions.contents = []
 
   def resetStatus(self):
-    self.status = []
+    self.status.contents = []
 
   def resetWarnings(self):
-    self.warnings = []
+    self.warnings.contents = []
 
   async def log(self, **options):
     title         = options.get('title')
@@ -80,16 +90,16 @@ class Situation:
     if messageStart:
       description += f'{messageStart}\n'
 
-    for e in self.exceptions:
+    for e in self.exceptions.contents:
       description += f'\n{boldred}{syx.exception}:{colourend} {e}'
 
-    for f in self.errors:
+    for f in self.errors.contents:
       description += f'\n{boldred}{syx.error}:{colourend} {f}'
 
-    for meh in self.warnings:
+    for meh in self.warnings.contents:
       description += f'\n{boldyellow}{syx.warning}:{colourend} {meh}'
 
-    for fact in self.status:
+    for fact in self.status.contents:
       description += f'\n{bold}{syx.status}:{colourend} {fact}'
 
     print(description)
@@ -109,21 +119,21 @@ class Situation:
     s = ClientSession()
     async with s:
       colourCode      = 0x7a2faf
-      if len(self.warnings) > 0:
+      if len(self.warnings.contents) > 0:
         colourCode    = 0xfffa38
-      if len(self.errors) > 0 or len(self.exceptions) > 0:
+      if len(self.errors.contents) > 0 or len(self.exceptions.contents) > 0:
         colourCode    = 0xff4238
 
-      for e in self.exceptions:
+      for e in self.exceptions.contents:
         description += f'\n\n```diff\n- {syx.exception} -\n```\n{e}'
 
-      for f in self.errors:
+      for f in self.errors.contents:
         description += f'\n\n```diff\n- {syx.error} -\n```\n{f}'
 
-      for meh in self.warnings:
+      for meh in self.warnings.contents:
         description += f'\n\n```fix\n- {syx.warning} -\n```\n{meh}'
 
-      for fact in self.status:
+      for fact in self.status.contents:
         description += f'\n\n```txt\n- {syx.status} -\n```\n{fact}'
 
       embed = Embed(

@@ -37,9 +37,9 @@ async def handleWsys(ctx, moiraSession, situation, paths):
       s         = ApiCall(endpoint=endpoint)
       res       = await s.sendCall()
     except UnreachableException as f:
-      sit.warnings.append(f'{name}: {f}')
+      sit.warnings.appendMessage(f'{name}: {f}')
     except Exception as e:
-      sit.exceptions.append(f'{name}: {e}')
+      sit.exceptions.appendMessage(f'{name}: {e}')
     else:
       json      = res.json()
 

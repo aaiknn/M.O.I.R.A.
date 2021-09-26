@@ -22,7 +22,7 @@ async def mindThoseArgs(self, ctx, sessionSituation, globalSession, loggers):
   sessionUser = sit.sessionUser
 
   if loggers.log_level > 0:
-    globalSession.status.append(status.discord_moira_admin_session_started.format(self, ctx.author, chid))
+    globalSession.status.appendMessage(status.discord_moira_admin_session_started.format(self, ctx.author, chid))
 
   if sessionUser.role == 'admin':
     if c == f'{sit.handler.command_prefix}{sit.handler.nickname} ?':
@@ -34,7 +34,7 @@ async def mindThoseArgs(self, ctx, sessionSituation, globalSession, loggers):
       )
 
       if loggers.log_level > 0:
-        globalSession.status.append(status.discord_moira_admin_session_ended.format(self, ctx.author, chid))
+        globalSession.status.appendMessage(status.discord_moira_admin_session_ended.format(self, ctx.author, chid))
       return 'DONE'
 
     elif 'interactive' in c:
@@ -48,7 +48,7 @@ async def mindThoseArgs(self, ctx, sessionSituation, globalSession, loggers):
         await handleResponse(sit.handler, ctx, response)
 
       if loggers.log_level > 0:
-        globalSession.status.append(status.discord_moira_admin_session_ended.format(self, ctx.author, chid))
+        globalSession.status.appendMessage(status.discord_moira_admin_session_ended.format(self, ctx.author, chid))
       return 'DONE'
 
     elif 'attempt' in c:
@@ -75,13 +75,13 @@ async def mindThoseArgs(self, ctx, sessionSituation, globalSession, loggers):
             raise MoiraError(syx.subroutine_state_schrodinger.format('DB'))
 
           for f in localErrors:
-            sit.errors.append(f)
+            sit.errors.appendMessage(f)
 
           await sit.logIfNecessary(webhook=sit.handler.webhook)
 
           await self.send(ctx, choice(complete))
           if loggers.log_level > 0:
-            globalSession.status.append(status.discord_moira_admin_session_ended.format(self, ctx.author, chid))
+            globalSession.status.appendMessage(status.discord_moira_admin_session_ended.format(self, ctx.author, chid))
           return 'DONE'
 
       elif 'eonet' in c:
@@ -95,11 +95,11 @@ async def mindThoseArgs(self, ctx, sessionSituation, globalSession, loggers):
           except Warning as w:
             warnMessage = f'{syx.task} {taskName}: {w}'
             localWarnings.append(warnMessage)
-            sit.warnings.append(warnMessage)
+            sit.warnings.appendMessage(warnMessage)
           except Exception as e:
             exceptionMessage = f'{syx.task} {taskName}: {e}'
             localErrors.append(exceptionMessage)
-            sit.exceptions.append(exceptionMessage)
+            sit.exceptions.appendMessage(exceptionMessage)
 
           if self.tism.getSystemState('EONET') == 'UP':
             await self.send(ctx, choice(taskSuccessful).format(taskName), dm=True)
@@ -112,7 +112,7 @@ async def mindThoseArgs(self, ctx, sessionSituation, globalSession, loggers):
 
           await self.send(ctx, choice(complete))
           if loggers.log_level > 0:
-            globalSession.status.append(status.discord_moira_admin_session_ended.format(self, ctx.author, chid))
+            globalSession.status.appendMessage(status.discord_moira_admin_session_ended.format(self, ctx.author, chid))
           return 'DONE'
 
     if 'clear' in c:
@@ -120,7 +120,7 @@ async def mindThoseArgs(self, ctx, sessionSituation, globalSession, loggers):
         if 'errors' in c:
           self.db.errors = []
           if loggers.log_level > 0:
-            globalSession.status.append(status.discord_moira_admin_session_ended.format(self, ctx.author, chid))
+            globalSession.status.appendMessage(status.discord_moira_admin_session_ended.format(self, ctx.author, chid))
           return 'DONE'
 
     if 'load' in c:
@@ -139,7 +139,7 @@ async def mindThoseArgs(self, ctx, sessionSituation, globalSession, loggers):
           if len(s.errors) > 0:
             for ugh in s.errors:
               self.db.errors.append(ugh)
-              sit.errors.append(ugh)
+              sit.errors.appendMessage(ugh)
             await self.send(ctx, choice(taskFailed).format(taskName), dm=True)
           else:
             await self.send(ctx, choice(taskSuccessful).format(taskName), dm=True)
@@ -148,7 +148,7 @@ async def mindThoseArgs(self, ctx, sessionSituation, globalSession, loggers):
 
           await self.send(ctx, choice(complete))
           if loggers.log_level > 0:
-            globalSession.status.append(status.discord_moira_admin_session_ended.format(self, ctx.author, chid))
+            globalSession.status.appendMessage(status.discord_moira_admin_session_ended.format(self, ctx.author, chid))
           return 'DONE'
 
     elif 'reset' in c:
@@ -158,7 +158,7 @@ async def mindThoseArgs(self, ctx, sessionSituation, globalSession, loggers):
           self.tism.resetSessionState()
           await self.send(ctx, choice(stateResetHard))
           if loggers.log_level > 0:
-            globalSession.status.append(status.discord_moira_admin_session_ended.format(self, ctx.author, chid))
+            globalSession.status.appendMessage(status.discord_moira_admin_session_ended.format(self, ctx.author, chid))
           return 'DONE'
 
         elif 'soft' in c:
@@ -193,7 +193,7 @@ async def mindThoseArgs(self, ctx, sessionSituation, globalSession, loggers):
           await sit.logIfNecessary(webhook=sit.handler.webhook)
 
           if loggers.log_level > 0:
-            globalSession.status.append(status.discord_moira_admin_session_ended.format(self, ctx.author, chid))
+            globalSession.status.appendMessage(status.discord_moira_admin_session_ended.format(self, ctx.author, chid))
           return 'DONE'
 
     elif 'print' in c:
@@ -222,7 +222,7 @@ async def mindThoseArgs(self, ctx, sessionSituation, globalSession, loggers):
           await self.send(ctx, m, dm=True)
           await self.send(ctx, choice(complete))
           if loggers.log_level > 0:
-            globalSession.status.append(status.discord_moira_admin_session_ended.format(self, ctx.author, chid))
+            globalSession.status.appendMessage(status.discord_moira_admin_session_ended.format(self, ctx.author, chid))
           return 'DONE'
 
       elif 'db' in c:
@@ -238,7 +238,7 @@ async def mindThoseArgs(self, ctx, sessionSituation, globalSession, loggers):
           await self.send(ctx, m, dm=True)
           await self.send(ctx, choice(complete))
           if loggers.log_level > 0:
-            globalSession.status.append(status.discord_moira_admin_session_ended.format(self, ctx.author, chid))
+            globalSession.status.appendMessage(status.discord_moira_admin_session_ended.format(self, ctx.author, chid))
           return 'DONE'
 
         elif 'state' in c:
@@ -249,8 +249,8 @@ async def mindThoseArgs(self, ctx, sessionSituation, globalSession, loggers):
           await self.send(ctx, m, dm=True)
           await self.send(ctx, choice(complete))
           if loggers.log_level > 0:
-            globalSession.status.append(status.discord_moira_admin_session_ended.format(self, ctx.author, chid))
+            globalSession.status.appendMessage(status.discord_moira_admin_session_ended.format(self, ctx.author, chid))
           return 'DONE'
 
   if loggers.log_level > 0:
-    globalSession.status.append(status.discord_moira_admin_session_ended.format(self, ctx.author, chid))
+    globalSession.status.appendMessage(status.discord_moira_admin_session_ended.format(self, ctx.author, chid))

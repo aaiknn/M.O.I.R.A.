@@ -75,11 +75,7 @@ parser.add_argument(
 args = parser.parse_args()
 
 globals = Situation(
-  noColour=noColour,
-  errors=[],
-  exceptions=[],
-  status=[],
-  warnings=[]
+  noColour=noColour
 )
 
 loggers = Loggers(
@@ -160,11 +156,11 @@ async def on_ready():
     moira.webhook,
     globals
   )
+  globals.resetAll()
 
   if loggers.log_level > 0:
-    globals.status.append(status.discord_moira_onready_ontestslogged.format(moira))
-    globals.resetAll()
-    globals.status.append(status.discord_moira_onready_onglobalsreset.format(moira))
+    globals.status.appendMessage(status.discord_moira_onready_ontestslogged.format(moira))
+    globals.status.appendMessage(status.discord_moira_onready_onglobalsreset.format(moira))
 
 @moira.event
 async def on_command_error(ctx, err):
@@ -173,7 +169,7 @@ async def on_command_error(ctx, err):
 @moira.event
 async def on_error(eventName):
   errorMessage = syx.error_on_event.format(eventName)
-  globals.errors.append(errorMessage)
+  globals.errors.appendMessage(errorMessage)
   await globals.log(webhook=moira.webhook)
   globals.resetAll()
 
@@ -201,7 +197,7 @@ async def initialPrompting(ctx):
   sessionUser       = None
 
   if loggers.log_level > 0:
-    globals.status.append(status.discord_moira_called.format(moira, ctx.author))
+    globals.status.appendMessage(status.discord_moira_called.format(moira, ctx.author))
 
   if moira.administrator:
     for entry in ctx.author.roles:
@@ -217,7 +213,7 @@ async def initialPrompting(ctx):
 
   if not sessionUser:
     if loggers.log_level > 0:
-      globals.status.append(status.discord_moira_not_a_sessionuser.format(ctx.author, moira))
+      globals.status.appendMessage(status.discord_moira_not_a_sessionuser.format(ctx.author, moira))
     return
 
   sit = SessionSituation(
@@ -232,13 +228,13 @@ async def initialPrompting(ctx):
     warnings=[]
   )
   if loggers.log_level > 0:
-    globals.status.append(status.discord_moira_sit_created.format(ctx.author, chid))
+    globals.status.appendMessage(status.discord_moira_sit_created.format(ctx.author, chid))
 
   try:
     if isinstance(sessionUser, SessionAdmin):
       outcome = await mindThoseArgs(moira, ctx, sit, globals, loggers)
   except Exception as e:
-    sit.exceptions.append(e)
+    sit.exceptions.appendMessage(e)
     await sit.logIfNecessary(
       title='',
       webhook=moira.webhook
@@ -251,7 +247,7 @@ async def initialPrompting(ctx):
   angryState = ctx.author.id in moira.tism.state['angryAt'] and len(moira.tism.state['angryAt'][ctx.author.id]) > 0
   if angryState:
     if loggers.log_level > 0:
-      globals.status.append(status.discord_moira_angered.format(moira, ctx.author, chid))
+      globals.status.appendMessage(status.discord_moira_angered.format(moira, ctx.author, chid))
     return
 
   busyState = moira.tism.getBusyState(chid)
@@ -264,20 +260,20 @@ async def initialPrompting(ctx):
   if type(ctx.channel) == DMChannel:
     await moira.send(ctx, misc['notInDMs'])
     if loggers.log_level > 0:
-      globals.status.append(status.discord_moira_called_in_dms.format(moira, ctx.author))
+      globals.status.appendMessage(status.discord_moira_called_in_dms.format(moira, ctx.author))
     return
 
   elif type(ctx.channel) == TextChannel:
     session = MoiraSession(ctx, moira, sessionUser)
     await session.createSession(phrase=choice(initialPrompt))
     if loggers.log_level > 0:
-      globals.status.append(status.discord_moira_session_created.format(moira, ctx.author, chid))
+      globals.status.appendMessage(status.discord_moira_session_created.format(moira, ctx.author, chid))
 
     session.userMessage = await waitForQualificationInput(session.handler, session.ctx)
     if not session.userMessage:
       await session.exitSession()
       if loggers.log_level > 0:
-        globals.status.append(status.discord_moira_session_ended.format(moira, ctx.author, chid))
+        globals.status.appendMessage(status.discord_moira_session_ended.format(moira, ctx.author, chid))
       return
 
     try:
@@ -286,7 +282,7 @@ async def initialPrompting(ctx):
     except InterruptedError:
       await session.exitSession(response=choice(nevermindedThen))
       if loggers.log_level > 0:
-        globals.status.append(status.discord_moira_session_ended.format(moira, ctx.author, chid))
+        globals.status.appendMessage(status.discord_moira_session_ended.format(moira, ctx.author, chid))
       return
 
     except ModuleNotFoundError:
@@ -295,13 +291,13 @@ async def initialPrompting(ctx):
       else:
         await session.exitSession(response=choice(unsure))
       if loggers.log_level > 0:
-        globals.status.append(status.discord_moira_session_ended.format(moira, ctx.author, chid))
+        globals.status.appendMessage(status.discord_moira_session_ended.format(moira, ctx.author, chid))
       return
 
     except NotImplementedError:
       await session.exitSession(response=choice(unsure))
       if loggers.log_level > 0:
-        globals.status.append(status.discord_moira_session_ended.format(moira, ctx.author, chid))
+        globals.status.appendMessage(status.discord_moira_session_ended.format(moira, ctx.author, chid))
       return
 
     except MoiraTypeError:
@@ -314,22 +310,22 @@ async def initialPrompting(ctx):
       else:
         await session.exitSession(response=choice(ha))
       if loggers.log_level > 0:
-        globals.status.append(status.discord_moira_session_ended.format(moira, ctx.author, chid))
+        globals.status.appendMessage(status.discord_moira_session_ended.format(moira, ctx.author, chid))
       return
 
     except TimeoutError:
       await session.exitSession()
       if loggers.log_level > 0:
-        globals.status.append(status.discord_moira_session_ended.format(moira, ctx.author, chid))
+        globals.status.appendMessage(status.discord_moira_session_ended.format(moira, ctx.author, chid))
       return
 
     except Exception as e:
       errorMessage = syx.exception_qualifying_input.format(syx.exception, e)
-      globals.exceptions.append(errorMessage)
+      globals.exceptions.appendMessage(errorMessage)
       await globals.log(webhook=moira.webhook)
       await session.exitSession()
       if loggers.log_level > 0:
-        globals.status.append(status.discord_moira_session_ended.format(moira, ctx.author, chid))
+        globals.status.appendMessage(status.discord_moira_session_ended.format(moira, ctx.author, chid))
       return
 
     sessionState = session.getState()
@@ -371,15 +367,15 @@ async def initialPrompting(ctx):
     sit.resetAll()
 
     if loggers.log_level > 0:
-      globals.status.append(status.discord_moira_session_ended.format(moira, ctx.author, chid))
+      globals.status.appendMessage(status.discord_moira_session_ended.format(moira, ctx.author, chid))
 
   else:
     await moira.send(ctx, misc['notInOther'])
     if loggers.log_level > 0:
-      globals.status.append(status.discord_moira_called_other_channel.format(moira, ctx.author, chid))
+      globals.status.appendMessage(status.discord_moira_called_other_channel.format(moira, ctx.author, chid))
 
   if loggers.log_level > 0:
-    globals.status.append(status.discord_moira_command_executed.format(moira, ctx.author, chid))
+    globals.status.appendMessage(status.discord_moira_command_executed.format(moira, ctx.author, chid))
     globals.logToTerm(
       title=syx.command_log,
       webhook=moira.webhook
