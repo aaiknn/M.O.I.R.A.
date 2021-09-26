@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
 
+discord_moira_admin_session_ended           = 'A {0.nickname} admin session was completed by {1} in channel {2}.'
+discord_moira_admin_session_started         = 'A {0.nickname} admin session was started by {1} in channel {2}.'
+discord_moira_angered                       = '{0.nickname} is angry at {1} because of what they said in channel {2}.'
+discord_moira_called                        = '{0.nickname} was called by {1}.'
+discord_moira_called_in_dms                 = '{1} called {0.nickname} in DMs.'
+discord_moira_called_other_channel          = '{1} called {0.nickname} in other channel (ID: {2}).'
+discord_moira_command_executed              = '{0.nickname} command was successfully executed by {1} in channel {2}.'
+discord_moira_not_a_sessionuser             = '{0} is not a sessionUser, {1.nickname} won\'t respond.'
 discord_moira_onready                       = 'Successfully logged in as {0.user}.'
 discord_moira_onevent_oncommanderror        = '{0.nickname} command error fires.'
 discord_moira_onevent_oncommanderror_stop   = '{0.nickname} command error event callback done executing.'
@@ -10,6 +18,9 @@ discord_moira_onready_onlogtests            = 'Logging prepping states for {0.ni
 discord_moira_onready_onstatesready         = 'States in {0.nickname} set.'
 discord_moira_onready_onselftestsready      = 'Selftests for {0.nickname} complete.'
 discord_moira_onready_ontestslogged         = 'Prepping states for {0.nickname} have been logged.'
+discord_moira_session_created               = 'A MoiraSession was created with {0.user} by {1} in channel {2}.'
+discord_moira_session_ended                 = 'A MoiraSession between {0.user} and {1} ended in channel {2}.'
+discord_moira_sit_created                   = 'A sessionSituation has been created for {0} in channel {1}.'
 
 discord_webhook_log_moira_up_title    = 'Moira up!'
 discord_webhook_log_moira_up_message  = 'It\'s true.\nUTC Timestamp: {0.tm_mday}-{0.tm_mon}-{0.tm_year} at {0.tm_hour}:{0.tm_min}:{0.tm_sec}.'

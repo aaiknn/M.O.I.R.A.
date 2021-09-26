@@ -49,6 +49,7 @@ class Loggers():
 class Logger():
   def __init__(self, **options):
     self.log_level  = options.get('log_level')
+    self.situation  = options.get('situation')
     self.type       = options.get('type')
 
 class TerminalLogger(Logger):

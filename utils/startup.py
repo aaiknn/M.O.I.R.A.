@@ -54,7 +54,14 @@ def noteExceptions(moira, openai_api_token, globals, loggers):
   if loggers.log_level > 0:
     globals.status.append(status.discord_moira_onready_onlogtests.format(moira))
 
-async def logTests(webhook, situation):
+async def retrieveDbMeta(moira, globals, loggers):
+  if moira.tism.getSystemState('DB') == 'UP':
+    await moira.db.retrieveMeta(moira)
+
+    if loggers.log_level > 0:
+      globals.status.append(status.discord_moira_onready_ondbmetaretrieved.format(moira))
+
+async def logStartup(webhook, situation):
   t             = timestamp()
   title         = status.discord_webhook_log_moira_up_title
   messageStart  = status.discord_webhook_log_moira_up_message.format(t)

@@ -3,6 +3,7 @@
 from random import choice
 from time import gmtime as timestamp
 
+from logs import status
 from phrases.default import stateResetHard, stateResetSoft, taskFailed, taskSuccessful
 from phrases.default import sysOpComplete as complete, sysOpCompleteWithSideEffects as soClose
 import phrases.system as syx
@@ -12,13 +13,16 @@ from utils.db import DBConnection
 from utils.prompts import handleResponse, parsePrompt
 from utils.selftests import dbSelftest, eonetSelftest
 
-async def mindThoseArgs(self, ctx, sessionSituation, globalSession):
+async def mindThoseArgs(self, ctx, sessionSituation, globalSession, loggers):
   sit         = sessionSituation
   sat         = globalSession
   c           = sit.userMessage.content
   chid        = sit.channelId
   chad        = ctx.author
   sessionUser = sit.sessionUser
+
+  if loggers.log_level > 0:
+    globalSession.status.append(status.discord_moira_admin_session_started.format(self, ctx.author, chid))
 
   if sessionUser.role == 'admin':
     if c == f'{sit.handler.command_prefix}{sit.handler.nickname} ?':
@@ -29,6 +33,8 @@ async def mindThoseArgs(self, ctx, sessionSituation, globalSession):
         webhook=sit.handler.webhook
       )
 
+      if loggers.log_level > 0:
+        globalSession.status.append(status.discord_moira_admin_session_ended.format(self, ctx.author, chid))
       return 'DONE'
 
     elif 'interactive' in c:
@@ -41,6 +47,8 @@ async def mindThoseArgs(self, ctx, sessionSituation, globalSession):
         response = await parsePrompt(sit.handler, ctx, message)
         await handleResponse(sit.handler, ctx, response)
 
+      if loggers.log_level > 0:
+        globalSession.status.append(status.discord_moira_admin_session_ended.format(self, ctx.author, chid))
       return 'DONE'
 
     elif 'attempt' in c:
@@ -72,6 +80,8 @@ async def mindThoseArgs(self, ctx, sessionSituation, globalSession):
           await sit.logIfNecessary(webhook=sit.handler.webhook)
 
           await self.send(ctx, choice(complete))
+          if loggers.log_level > 0:
+            globalSession.status.append(status.discord_moira_admin_session_ended.format(self, ctx.author, chid))
           return 'DONE'
 
       elif 'eonet' in c:
@@ -101,12 +111,16 @@ async def mindThoseArgs(self, ctx, sessionSituation, globalSession):
           await sit.logIfNecessary(webhook=sit.handler.webhook)
 
           await self.send(ctx, choice(complete))
+          if loggers.log_level > 0:
+            globalSession.status.append(status.discord_moira_admin_session_ended.format(self, ctx.author, chid))
           return 'DONE'
 
     if 'clear' in c:
       if 'db' in c:
         if 'errors' in c:
           self.db.errors = []
+          if loggers.log_level > 0:
+            globalSession.status.append(status.discord_moira_admin_session_ended.format(self, ctx.author, chid))
           return 'DONE'
 
     if 'load' in c:
@@ -133,6 +147,8 @@ async def mindThoseArgs(self, ctx, sessionSituation, globalSession):
           await sit.logIfNecessary(webhook=sit.handler.webhook)
 
           await self.send(ctx, choice(complete))
+          if loggers.log_level > 0:
+            globalSession.status.append(status.discord_moira_admin_session_ended.format(self, ctx.author, chid))
           return 'DONE'
 
     elif 'reset' in c:
@@ -141,6 +157,8 @@ async def mindThoseArgs(self, ctx, sessionSituation, globalSession):
           self.tism.resetBusyState()
           self.tism.resetSessionState()
           await self.send(ctx, choice(stateResetHard))
+          if loggers.log_level > 0:
+            globalSession.status.append(status.discord_moira_admin_session_ended.format(self, ctx.author, chid))
           return 'DONE'
 
         elif 'soft' in c:
@@ -174,6 +192,8 @@ async def mindThoseArgs(self, ctx, sessionSituation, globalSession):
 
           await sit.logIfNecessary(webhook=sit.handler.webhook)
 
+          if loggers.log_level > 0:
+            globalSession.status.append(status.discord_moira_admin_session_ended.format(self, ctx.author, chid))
           return 'DONE'
 
     elif 'print' in c:
@@ -201,6 +221,8 @@ async def mindThoseArgs(self, ctx, sessionSituation, globalSession):
 
           await self.send(ctx, m, dm=True)
           await self.send(ctx, choice(complete))
+          if loggers.log_level > 0:
+            globalSession.status.append(status.discord_moira_admin_session_ended.format(self, ctx.author, chid))
           return 'DONE'
 
       elif 'db' in c:
@@ -215,6 +237,8 @@ async def mindThoseArgs(self, ctx, sessionSituation, globalSession):
 
           await self.send(ctx, m, dm=True)
           await self.send(ctx, choice(complete))
+          if loggers.log_level > 0:
+            globalSession.status.append(status.discord_moira_admin_session_ended.format(self, ctx.author, chid))
           return 'DONE'
 
         elif 'state' in c:
@@ -224,4 +248,9 @@ async def mindThoseArgs(self, ctx, sessionSituation, globalSession):
 
           await self.send(ctx, m, dm=True)
           await self.send(ctx, choice(complete))
+          if loggers.log_level > 0:
+            globalSession.status.append(status.discord_moira_admin_session_ended.format(self, ctx.author, chid))
           return 'DONE'
+
+  if loggers.log_level > 0:
+    globalSession.status.append(status.discord_moira_admin_session_ended.format(self, ctx.author, chid))

@@ -46,10 +46,10 @@ class Situation:
     if not title:
       title       = syx.situation_log_fallback_title
 
+    self.logToTerm(title=title, messageStart=messageStart)
+
     if webhook['id'] and webhook['token']:
       await self.logToDiscord(webhook, title=title, messageStart=messageStart)
-
-    self.logToTerm(title=title, messageStart=messageStart)
 
   async def logIfNecessary(self, **options):
     need = False
