@@ -18,7 +18,7 @@ class SituationListing():
 
   def appendMessage(self, message):
     t     = timestamp()
-    time  = f'{t.tm_mday}-{t.tm_mon}-{t.tm_year}, {t.tm_hour}:{t.tm_min}:{t.tm_sec}'
+    time  = f'{t.tm_mday:02}-{t.tm_mon:02}-{t.tm_year}, {t.tm_hour:02}:{t.tm_min:02}:{t.tm_sec:02}'
     self.contents.append(f'{time} -- {message}')
 
 class Situation:

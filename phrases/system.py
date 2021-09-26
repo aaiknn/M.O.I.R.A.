@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+admin_session_log               = 'Admin Session Log'
 api                             = 'API'
 attempt_db_connection           = 'attempt connecting to database'
 attempt_eonet_selftest          = 'attempt EONET self-test'
