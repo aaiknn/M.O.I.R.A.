@@ -1,8 +1,10 @@
 # M.O.I.R.A. Personal Assistant
-A Discord bot that will talk to a few APIs on your behalf.
+A Discord bot that will talk to a few APIs on your behalf, and support your research efforts.
 
 **Note**: This project is in prototype stage. A lot of things will change in the future, so it might not be advisable to use it as a dependency for one of your own just yet.
 **Note**: For any issues or requests, please use the issue reporting function on the project's GitHub page.
+
+**Note**: <span style="color:red;">Discord has recently made some fundamental changes to their APIs, resulting in a major set-back in development efforts. These changes haven't yet been addressed in the current M.O.I.R.A. version.</span>
 
 ## User Documentation
 ### NO_COLOR
